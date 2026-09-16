@@ -34,6 +34,10 @@ Seeded demo accounts (log in with purpose `LOGIN`):
 - Worker (profile complete): `0771111111`
 - Employer (profile complete): `0772222222`
 
+The seed also creates 3 demo jobs (OPEN, dated relative to whenever the seed
+runs) so worker job-browsing has something to show — there's no employer
+job-creation UI yet (Phase 3).
+
 ## Scripts
 
 | Command | Purpose |
@@ -68,13 +72,27 @@ Seeded demo accounts (log in with purpose `LOGIN`):
   convention) is a UX redirect only — every actual mutation must still call
   `requireRole()` server-side (`src/server/auth/guard.ts`); the frontend is
   never trusted for authorization.
+- **Job browsing (Phase 2) is pull, not push.** Workers filter/browse open
+  jobs themselves (`GET /api/jobs`); the matching engine's job is to
+  auto-notify eligible workers and drive refill, which is a Phase 5
+  concern once assignments/cancellations exist. A `isPreferredCategory`
+  flag badges jobs matching the worker's stated preferences, but there's no
+  ranking or auto-matching yet.
+- **Timezone**: all job date/time handling currently assumes the process
+  runs in Sri Lanka time (true for local dev). Phase 3's real job-creation
+  form needs to pin this explicitly to `Asia/Colombo` rather than relying on
+  server-local time, since production will likely run in UTC (Vercel).
+  `prisma/seed.ts` has a worked example of the `@db.Date` pitfall this
+  causes if you build date-only values from a time-of-day-bearing `Date`.
 
 ## Build phases (see blueprint §36)
 
 - [x] **Phase 1** — project setup: repo structure, phone+OTP auth, roles,
       Prisma schema/migrations, basic UI shell (landing, login, three
       role-gated dashboard stubs).
-- [ ] Phase 2 — worker registration/profile/preferences/availability, job browsing
+- [x] **Phase 2** — worker profile completion (`/worker/onboarding`),
+      preferences and weekly availability, job browsing with category
+      filter (`/api/jobs`), and applying to a job (`/api/jobs/[id]/apply`).
 - [ ] Phase 3 — employer registration/verification, job creation/management
 - [ ] Phase 4 — coordinator dashboard: job approval, worker management, assignment
 - [ ] Phase 5 — core staffing lifecycle: applications, selection, confirmation,

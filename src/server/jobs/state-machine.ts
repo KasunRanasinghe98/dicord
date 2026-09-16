@@ -32,6 +32,13 @@ export function isTerminalJobStatus(status: JobStatus): boolean {
   return JOB_TRANSITIONS[status].length === 0;
 }
 
+// A worker can submit an application while the job is still accepting them.
+// PENDING_APPROVAL/DRAFT jobs aren't visible to workers at all (§13), and
+// FULL/CONFIRMATION+ jobs are no longer taking new applicants.
+export function isOpenForApplications(status: JobStatus): boolean {
+  return status === "OPEN" || status === "PARTIALLY_FILLED";
+}
+
 // Derives status from current confirmed-assignment count vs. positions
 // required. Does not decide CANCELLED/CONFIRMATION/IN_PROGRESS/COMPLETED —
 // those are explicit coordinator/employer actions, not headcount side

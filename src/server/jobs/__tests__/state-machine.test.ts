@@ -4,6 +4,7 @@ import {
   assertJobTransition,
   isTerminalJobStatus,
   deriveHeadcountStatus,
+  isOpenForApplications,
   canTransitionApplication,
 } from "@/server/jobs/state-machine";
 
@@ -36,6 +37,15 @@ describe("job state machine", () => {
     expect(deriveHeadcountStatus(0, 20)).toBe("OPEN");
     expect(deriveHeadcountStatus(17, 20)).toBe("PARTIALLY_FILLED");
     expect(deriveHeadcountStatus(20, 20)).toBe("FULL");
+  });
+
+  it("only accepts new applications while OPEN or PARTIALLY_FILLED", () => {
+    expect(isOpenForApplications("OPEN")).toBe(true);
+    expect(isOpenForApplications("PARTIALLY_FILLED")).toBe(true);
+    expect(isOpenForApplications("DRAFT")).toBe(false);
+    expect(isOpenForApplications("PENDING_APPROVAL")).toBe(false);
+    expect(isOpenForApplications("FULL")).toBe(false);
+    expect(isOpenForApplications("COMPLETED")).toBe(false);
   });
 });
 
