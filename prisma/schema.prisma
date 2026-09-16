@@ -1,0 +1,419 @@
+// Digital Coordinator — v0.1 data model
+// Mirrors blueprint §25 entity list. Design decisions noted inline where the
+// blueprint left something ambiguous (§41: "choose the simplest implementation
+// that preserves future extensibility and document the decision").
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum Role {
+  WORKER
+  EMPLOYER
+  COORDINATOR
+  ADMIN
+}
+
+enum AccountStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  BANNED
+}
+
+enum VerificationStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum JobCategory {
+  HANDBILL_DISTRIBUTION
+  STOCK_COUNTING
+  EVENT_HELPER
+  CROWD_HANDLING
+  OTHER
+}
+
+enum EmployerType {
+  TUITION
+  FLOWER_SHOP
+  HOTEL
+  SPARE_PARTS_COMPANY
+  EVENT_ORGANIZER
+  OTHER
+}
+
+// Blueprint §11. Kept exactly as specified — the state machine is enforced
+// in application code (see src/server/jobs/state-machine.ts), not in the DB.
+enum JobStatus {
+  DRAFT
+  PENDING_APPROVAL
+  OPEN
+  PARTIALLY_FILLED
+  FULL
+  CONFIRMATION
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+// Blueprint §12.
+enum ApplicationStatus {
+  APPLIED
+  SHORTLISTED
+  SELECTED
+  CONFIRMED
+  DECLINED
+  WITHDRAWN
+  CANCELLED
+  NO_SHOW
+  ATTENDED
+  COMPLETED
+}
+
+// A confirmed, counted-toward-headcount occupation of one of a job's
+// positions. Deliberately separate from Application (§12: "Applied is NOT
+// the same as Assigned") — an Assignment is only created when a worker is
+// selected and confirmed.
+enum AssignmentStatus {
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+enum AttendanceStatus {
+  PENDING
+  WORKER_CONFIRMED
+  PRESENT
+  LATE
+  ABSENT
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  DISPUTED
+}
+
+enum NotificationType {
+  NEW_MATCHING_JOB
+  APPLICATION_RECEIVED
+  SELECTED
+  ASSIGNMENT_CONFIRMED
+  JOB_ALMOST_FULL
+  JOB_FULL
+  WORKER_CANCELLATION
+  REPLACEMENT_OPPORTUNITY
+  ATTENDANCE_REMINDER
+  JOB_STARTING_SOON
+  JOB_COMPLETED
+  PAYMENT_STATUS_UPDATE
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  SMS
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  READ
+}
+
+enum OtpPurpose {
+  LOGIN
+  REGISTER
+}
+
+enum RatingFromRole {
+  WORKER
+  EMPLOYER
+}
+
+// ---------------------------------------------------------------------------
+// Auth
+// ---------------------------------------------------------------------------
+
+// Phone + OTP is the only auth method for v0.1 (confirmed with product owner).
+// No password field anywhere in the schema on purpose.
+model User {
+  id            String        @id @default(cuid())
+  phone         String        @unique
+  email         String?
+  role          Role
+  accountStatus AccountStatus @default(PENDING)
+  createdAt     DateTime      @default(now())
+  lastActiveAt  DateTime      @default(now())
+
+  workerProfile   WorkerProfile?
+  employerProfile EmployerProfile?
+
+  notifications Notification[]
+  auditLogs     AuditLog[]      @relation("AuditActor")
+
+  @@map("users")
+}
+
+// Short-lived one-time codes for phone login/registration. Never store the
+// raw code — only its hash — so a DB read can't leak a usable credential.
+model OtpCode {
+  id          String     @id @default(cuid())
+  phone       String
+  codeHash    String
+  purpose     OtpPurpose
+  attempts    Int        @default(0)
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  createdAt   DateTime   @default(now())
+
+  @@index([phone, purpose])
+  @@map("otp_codes")
+}
+
+// ---------------------------------------------------------------------------
+// Profiles
+// ---------------------------------------------------------------------------
+
+model WorkerProfile {
+  id                   String              @id @default(cuid())
+  userId               String              @unique
+  user                 User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName             String
+  profilePhotoUrl      String?
+  location             String?
+  preferredAreas       String[]            @default([])
+  university           String?
+  skills               String[]            @default([])
+  preferredCategories  JobCategory[]       @default([])
+  languages            String[]            @default([])
+  transportAvailable   Boolean             @default(false)
+  verificationStatus   VerificationStatus  @default(UNVERIFIED)
+  verifiedAt           DateTime?
+  verifiedByUserId     String?
+  createdAt            DateTime            @default(now())
+
+  availability   WorkerAvailability[]
+  applications   Application[]
+  assignments    Assignment[]
+
+  @@map("worker_profiles")
+}
+
+// General weekly availability pattern used by the matching engine as a
+// pre-filter. Specific per-job commitment is tracked on Assignment, not
+// here — this table answers "should we even notify this worker", not
+// "is this worker free at this exact time".
+model WorkerAvailability {
+  id              String        @id @default(cuid())
+  workerProfileId String
+  workerProfile   WorkerProfile @relation(fields: [workerProfileId], references: [id], onDelete: Cascade)
+  dayOfWeek       Int // 0 = Sunday .. 6 = Saturday
+  isAvailable     Boolean       @default(true)
+
+  @@unique([workerProfileId, dayOfWeek])
+  @@map("worker_availability")
+}
+
+model EmployerProfile {
+  id                 String             @id @default(cuid())
+  userId             String             @unique
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessName       String
+  contactPerson      String
+  location           String?
+  employerType       EmployerType
+  verificationStatus VerificationStatus @default(UNVERIFIED)
+  verifiedAt         DateTime?
+  verifiedByUserId   String?
+  createdAt          DateTime           @default(now())
+
+  jobs Job[]
+
+  @@map("employer_profiles")
+}
+
+// ---------------------------------------------------------------------------
+// Jobs, applications, assignments
+// ---------------------------------------------------------------------------
+
+model Job {
+  id                  String      @id @default(cuid())
+  employerId          String
+  employer            EmployerProfile @relation(fields: [employerId], references: [id])
+  title               String
+  category            JobCategory
+  description         String
+  workersRequired     Int
+  date                DateTime    @db.Date
+  startTime           DateTime
+  endTime             DateTime
+  location            String
+  payPerWorker        Decimal     @db.Decimal(10, 2)
+  mealsProvided       Boolean     @default(false)
+  transportProvided   Boolean     @default(false)
+  requiredSkills      String[]    @default([])
+  applicationDeadline DateTime?
+  status              JobStatus   @default(DRAFT)
+  coordinatorNotes    String?
+  approvedByUserId    String?
+  approvedAt          DateTime?
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  applications Application[]
+  assignments  Assignment[]
+  payments     Payment[]
+
+  @@index([status, date])
+  @@map("jobs")
+}
+
+model Application {
+  id              String            @id @default(cuid())
+  jobId           String
+  job             Job               @relation(fields: [jobId], references: [id])
+  workerProfileId String
+  worker          WorkerProfile     @relation(fields: [workerProfileId], references: [id])
+  status          ApplicationStatus @default(APPLIED)
+  appliedAt       DateTime          @default(now())
+  decidedAt       DateTime?
+  decidedByUserId String?
+
+  assignment Assignment?
+
+  @@unique([jobId, workerProfileId])
+  @@index([jobId, status])
+  @@map("applications")
+}
+
+// Created only once an application is selected and confirmed — this is what
+// counts toward a job's required headcount.
+model Assignment {
+  id              String           @id @default(cuid())
+  applicationId   String           @unique
+  application     Application      @relation(fields: [applicationId], references: [id])
+  jobId           String
+  job             Job              @relation(fields: [jobId], references: [id])
+  workerProfileId String
+  worker          WorkerProfile    @relation(fields: [workerProfileId], references: [id])
+  status          AssignmentStatus @default(CONFIRMED)
+  isReplacementFor String?         // id of the Assignment this one replaced, if any
+  confirmedAt     DateTime         @default(now())
+  cancelledAt     DateTime?
+  cancelledReason String?
+  createdAt       DateTime         @default(now())
+
+  attendance Attendance?
+  payment    Payment?
+  ratings    Rating[]
+
+  @@index([jobId, status])
+  @@index([workerProfileId, status])
+  @@map("assignments")
+}
+
+model Attendance {
+  id                      String            @id @default(cuid())
+  assignmentId            String            @unique
+  assignment              Assignment        @relation(fields: [assignmentId], references: [id])
+  workerConfirmedAt       DateTime?
+  status                  AttendanceStatus  @default(PENDING)
+  markedByUserId          String?
+  markedAt                DateTime?
+  notes                   String?
+
+  @@map("attendance")
+}
+
+// One row per assignment (worker-shift), holding both sides of the money
+// (§18): what the worker is owed and the platform fee taken from the
+// employer. Fee is a snapshot of the configured rate at completion time,
+// not a live reference, so historical records don't shift if the rate
+// changes later.
+model Payment {
+  id                     String        @id @default(cuid())
+  jobId                  String
+  job                    Job           @relation(fields: [jobId], references: [id])
+  assignmentId           String        @unique
+  assignment             Assignment    @relation(fields: [assignmentId], references: [id])
+  workerPayAmount        Decimal       @db.Decimal(10, 2)
+  platformFeeAmount      Decimal       @db.Decimal(10, 2)
+  employerPaymentStatus  PaymentStatus @default(PENDING)
+  employerPaidAt         DateTime?
+  workerPaymentStatus    PaymentStatus @default(PENDING)
+  workerPaidAt           DateTime?
+  notes                  String?
+  createdAt              DateTime      @default(now())
+
+  @@map("payments")
+}
+
+model Rating {
+  id           String         @id @default(cuid())
+  assignmentId String
+  assignment   Assignment     @relation(fields: [assignmentId], references: [id])
+  fromRole     RatingFromRole
+  score        Int // 1-5
+  comment      String?
+  createdAt    DateTime       @default(now())
+
+  @@unique([assignmentId, fromRole])
+  @@map("ratings")
+}
+
+// ---------------------------------------------------------------------------
+// Notifications
+// ---------------------------------------------------------------------------
+
+model Notification {
+  id                   String              @id @default(cuid())
+  userId               String
+  user                 User                @relation(fields: [userId], references: [id])
+  type                 NotificationType
+  channel              NotificationChannel @default(IN_APP)
+  title                String
+  body                 String
+  relatedJobId         String?
+  relatedAssignmentId  String?
+  status               NotificationStatus  @default(PENDING)
+  createdAt            DateTime            @default(now())
+  sentAt               DateTime?
+  readAt               DateTime?
+
+  @@index([userId, status])
+  @@map("notifications")
+}
+
+// ---------------------------------------------------------------------------
+// Audit
+// ---------------------------------------------------------------------------
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  actorUserId   String?
+  actor         User?    @relation("AuditActor", fields: [actorUserId], references: [id])
+  action        String
+  targetType    String
+  targetId      String
+  metadata      Json?
+  createdAt     DateTime @default(now())
+
+  @@index([targetType, targetId])
+  @@index([actorUserId])
+  @@map("audit_logs")
+}

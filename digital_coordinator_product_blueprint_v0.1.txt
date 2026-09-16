@@ -1,0 +1,1432 @@
+PART-TIME WORK PLATFORM — DIGITAL COORDINATOR
+Product Blueprint v0.1
+Status: Pre-development / Pilot MVP
+Purpose: Context and implementation brief for Claude Code
+
+============================================================
+0. PROJECT OVERVIEW
+============================================================
+
+We are building a platform for Sri Lanka that connects people seeking
+part-time/short-term work (initially university undergraduates) with
+employers who need temporary workers.
+
+The initial product is NOT intended to be a generic job board. The first
+goal is to digitize and automate an existing real-world coordination
+operation currently handled manually by a coordinator.
+
+The coordinator already has access to a community of 2,000+ potential
+workers, predominantly university undergraduates, and already works with
+some employers. This existing network will be used as the initial pilot
+community.
+
+CORE IDEA:
+Employer posts a staffing requirement -> suitable workers are notified ->
+workers indicate availability/apply -> positions are confirmed -> workers
+can confirm attendance -> cancellations trigger replacement/refill ->
+coordinator monitors everything from a dashboard.
+
+The long-term product should cover:
+Job -> Matching -> Confirmation -> Attendance -> Replacement ->
+Completion -> Payment -> Work history / reputation.
+
+For v0.1, keep the scope deliberately small. Build the digital coordinator
+and prove the workflow with real users before implementing complex payments,
+AI, native mobile apps, or a large public marketplace.
+
+============================================================
+1. THE PROBLEM
+============================================================
+
+Current manual process:
+
+1. Employer contacts the coordinator.
+2. Coordinator posts the job into several WhatsApp groups.
+3. Workers manually respond.
+4. Coordinator collects and checks responses.
+5. Coordinator confirms suitable workers.
+6. Coordinator confirms details with employer.
+7. Coordinator repeatedly checks whether workers will actually attend.
+8. If somebody cancels, coordinator manually searches for a replacement.
+9. Coordinator checks attendance at the work location/time.
+10. Coordinator follows up if the required headcount is not fulfilled.
+11. Employer pays the coordinator.
+12. Coordinator calculates/distributes payments to workers, often through
+    bank transfers in bulk/group-based arrangements.
+13. Coordinator bears operational stress and may be blamed when staffing
+    requirements are not fulfilled.
+
+This is repetitive, stressful and difficult to scale.
+
+The platform should turn the coordinator's manual workflow into a
+centralized digital workflow.
+
+============================================================
+2. PRODUCT VISION
+============================================================
+
+VISION:
+Make short-term and part-time staffing as easy and reliable as ordering
+people for a shift rather than manually coordinating through calls and
+WhatsApp groups.
+
+The product should eventually become a trusted workforce network, not just
+a vacancy listing site.
+
+Important distinction:
+A normal job board mainly provides discovery.
+This platform should eventually manage the complete staffing lifecycle.
+
+Target lifecycle:
+
+Employer
+  -> Create staffing requirement
+  -> System identifies suitable workers
+  -> Workers receive opportunity
+  -> Workers confirm availability
+  -> Employer/coordinator confirms assignment
+  -> Attendance window opens
+  -> Worker confirms attendance
+  -> Cancellation/refill mechanism operates
+  -> Shift is completed
+  -> Payment is recorded
+  -> Work history/reputation is updated
+
+============================================================
+3. INITIAL TARGET MARKET
+============================================================
+
+PRIMARY INITIAL WORKER GROUP:
+University undergraduates in Sri Lanka.
+
+Target initial community:
+At least 1,500 active potential workers, from an existing network of
+2,000+ people.
+
+The platform may later expand to:
+- Other students
+- Freelancers
+- General part-time workers
+- People seeking additional income
+- Temporary/shift workers
+
+Do NOT optimize v0.1 for the entire Sri Lankan labour market.
+
+INITIAL JOB CATEGORIES:
+- Handbill distribution
+- Stock counting
+- Event helper
+- Crowd handling
+
+POSSIBLE FUTURE CATEGORIES:
+- Hotel/event staffing
+- Retail temporary staffing
+- Promotions
+- Marketing campaigns
+- Exhibition/event crews
+- Temporary office work
+- Logistics
+- Other short-term services
+
+INITIAL EMPLOYER TYPES:
+- Tuition teachers / tuition-related employers
+- Flower shops
+- Hotels
+- Spare-parts companies
+- Event organizers
+- Other small businesses needing temporary staff
+
+============================================================
+4. THREE CORE ACTORS
+============================================================
+
+A. WORKER
+People who want part-time/temporary jobs.
+
+B. EMPLOYER
+Businesses or individuals who need one or more workers for a specific
+short-term job/shift.
+
+C. COORDINATOR
+The existing person who currently performs the manual staffing operation.
+In v0.1, the coordinator is critical and should NOT be eliminated.
+The product should make this person's job dramatically easier.
+
+There may also be an ADMIN role for technical/platform administration.
+
+Important philosophy:
+"Give the coordinator superpowers, don't remove the coordinator on day one."
+
+The coordinator should be able to monitor, intervene, verify and override
+automated actions when necessary.
+
+============================================================
+5. VALUE PROPOSITION
+============================================================
+
+WORKER VALUE:
+
+- Find relevant part-time jobs in one place.
+- Filter jobs according to preferred work type.
+- Set availability.
+- Avoid repeatedly asking around for opportunities.
+- See clear job details before applying.
+- Record work history.
+- Build a reputation through completed jobs.
+- Eventually receive more suitable opportunities based on history,
+  preferences and availability.
+- Have a structured attendance/confirmation process.
+- Eventually benefit from more reliable/guaranteed payment handling.
+
+EMPLOYER VALUE:
+
+- No need to search for workers through multiple contacts/groups.
+- Post a requirement once.
+- See current staffing/confirmation status.
+- Find workers with relevant experience/history.
+- See worker availability.
+- Reduce calls and manual coordination.
+- Automatically refill cancelled positions where possible.
+- Eventually pay for staffing in one structured transaction.
+- Build visibility into worker reliability.
+
+COORDINATOR VALUE:
+
+- One dashboard instead of many WhatsApp groups.
+- Centralized worker database.
+- Centralized employer/job database.
+- Automatic notifications.
+- Easier confirmation tracking.
+- Automatic candidate matching.
+- Automatic replacement/refill.
+- Attendance monitoring.
+- Work history.
+- Payment tracking.
+- Ability to handle more jobs and workers than manual coordination.
+- Reduce repetitive and stressful tasks.
+
+CORE EMOTIONAL VALUE FOR COORDINATOR:
+"The system keeps working while I can finally take a break."
+
+============================================================
+6. PRODUCT POSITIONING
+============================================================
+
+Do NOT position v0.1 merely as:
+"Another part-time job app."
+
+The stronger positioning is:
+
+"A digital workforce coordination platform for short-term and part-time
+staffing."
+
+The initial product is essentially:
+"WhatsApp-based manual staffing coordination, converted into software."
+
+The product's potential differentiation is the WORKFLOW, not merely job
+listing.
+
+Long-term differentiation can come from:
+- Verified workers
+- Work history
+- Two-sided reputation
+- Reliability/attendance history
+- Real-time staffing status
+- Automated replacement
+- Structured shift management
+- Employer reliability history
+- Efficient matching
+- A growing trusted workforce network
+
+============================================================
+7. V0.1 GOAL
+============================================================
+
+The primary objective of v0.1 is NOT maximum features.
+
+The objective is:
+
+PROVE THAT THE EXISTING MANUAL COORDINATION PROCESS CAN BE DIGITIZED
+AND USED FOR REAL JOBS BY REAL WORKERS AND EMPLOYERS.
+
+Success means:
+- Workers can register and use the system.
+- Employers can create staffing requirements.
+- Coordinator can manage jobs.
+- Workers can apply/confirm.
+- Positions can be filled.
+- Cancellations can be handled.
+- Coordinator can see the state of every active job.
+- Real pilot jobs can be completed using the system.
+
+If this works, later versions can introduce stronger automation and
+monetization.
+
+============================================================
+8. V0.1 SCOPE
+============================================================
+
+BUILD THESE CORE COMPONENTS:
+
+1. Worker interface
+2. Employer interface
+3. Coordinator/Admin dashboard
+4. Backend API
+5. Database
+6. Authentication/authorization
+7. Basic notifications
+8. Job lifecycle management
+9. Application/assignment management
+10. Availability/attendance workflow
+11. Cancellation/replacement workflow
+12. Basic work history
+13. Basic payment tracking (NOT necessarily payment gateway)
+14. Basic reporting/analytics
+
+DO NOT BUILD YET:
+
+- Native Android/iOS apps unless technically necessary.
+- Full online payment gateway.
+- Complex wallet system.
+- AI matching.
+- Facial recognition.
+- Blockchain.
+- Social feed.
+- Complex in-app chat.
+- Advanced recommendation engine.
+- Large public marketplace.
+- Complicated subscription system.
+- Unnecessary microservices.
+- Over-engineered cloud architecture.
+
+Prefer a responsive web application/PWA for v0.1 unless development
+experience or project requirements strongly justify another approach.
+
+============================================================
+9. WORKER PROFILE
+============================================================
+
+Minimum worker profile fields:
+
+- Worker ID
+- Full name
+- Phone number
+- Email (optional if phone authentication is used)
+- Profile photo (optional for v0.1)
+- Location / preferred working areas
+- Student/university information (optional/appropriate for pilot)
+- Skills
+- Preferred job categories
+- Availability
+- Transport availability (optional)
+- Languages (optional)
+- Verification status
+- Account status
+- Created date
+- Last active date
+
+Work history should eventually include:
+- Jobs applied for
+- Jobs assigned
+- Jobs completed
+- Jobs cancelled
+- Attendance
+- Employer feedback
+- Ratings
+
+For v0.1, keep profile fields manageable.
+
+============================================================
+10. EMPLOYER PROFILE
+============================================================
+
+Minimum employer fields:
+
+- Employer ID
+- Business/person name
+- Contact person
+- Phone
+- Email (optional)
+- Location
+- Employer type/category
+- Verification status
+- Account status
+- Created date
+
+Eventually:
+- Employer work history
+- Number of jobs
+- Completion/cancellation history
+- Worker feedback
+- Payment reliability
+
+============================================================
+11. JOB MODEL
+============================================================
+
+A job represents a specific staffing requirement.
+
+Minimum fields:
+
+- Job ID
+- Employer ID
+- Job title
+- Job category
+- Description
+- Number of workers required
+- Date
+- Start time
+- End time
+- Location
+- Pay per worker
+- Meals provided? (optional)
+- Transport provided? (optional)
+- Required skills
+- Gender requirement only if legally/operationally justified; avoid
+  unnecessary discrimination.
+- Minimum/maximum age only where genuinely required and lawful.
+- Application deadline
+- Job status
+- Created timestamp
+- Updated timestamp
+- Coordinator notes
+
+Suggested statuses:
+
+DRAFT
+PENDING_APPROVAL
+OPEN
+PARTIALLY_FILLED
+FULL
+CONFIRMATION
+IN_PROGRESS
+COMPLETED
+CANCELLED
+
+Keep the state machine explicit in code.
+
+============================================================
+12. APPLICATION / ASSIGNMENT MODEL
+============================================================
+
+A worker can apply to a job.
+
+Suggested application states:
+
+APPLIED
+SHORTLISTED
+SELECTED
+CONFIRMED
+DECLINED
+WITHDRAWN
+CANCELLED
+NO_SHOW
+ATTENDED
+COMPLETED
+
+Important:
+"Applied" is NOT the same as "Assigned".
+
+A job requiring 20 workers may have 50 applicants, but only 20 active
+assignments.
+
+Store timestamps for important state changes.
+
+============================================================
+13. JOB FILLING WORKFLOW
+============================================================
+
+Example:
+
+Employer creates:
+Event helper
+Date: Saturday
+Time: 8 AM - 6 PM
+Location: Colombo
+Required: 20 workers
+Pay: Rs. 3,500 per worker
+
+Coordinator approves/publishes.
+
+System identifies eligible workers.
+
+Workers receive notifications.
+
+Worker taps:
+AVAILABLE / APPLY
+
+Applications accumulate.
+
+Coordinator/employer can select workers.
+
+When 20 workers are confirmed:
+Job becomes FULL.
+
+Employer/coordinator sees:
+20 / 20 confirmed.
+
+If only 17:
+17 / 20 confirmed
+Status: PARTIALLY_FILLED
+
+System should make remaining positions visible.
+
+============================================================
+14. AUTO-REFILL / REPLACEMENT
+============================================================
+
+This is one of the most important product features.
+
+Example:
+
+20 workers confirmed.
+
+Worker #12 later says:
+"I cannot attend."
+
+The position becomes:
+19 / 20.
+
+System should identify suitable replacement candidates based on:
+- Location
+- Job category
+- Skills
+- Availability
+- Previous participation
+- Reliability
+- Not already assigned to conflicting job
+
+Then notify candidates in a controlled sequence.
+
+Example:
+Candidate A gets opportunity.
+If no response within configurable time:
+Candidate B.
+Then Candidate C.
+
+Coordinator can manually override or disable auto-refill.
+
+For v0.1, implement a simple deterministic matching/refill algorithm,
+not AI.
+
+============================================================
+15. ATTENDANCE
+============================================================
+
+Attendance is important because the platform is managing actual staffing,
+not just applications.
+
+V0.1 attendance can be simple.
+
+Possible workflow:
+
+Before shift:
+Worker sees:
+"Confirm attendance"
+
+Worker taps:
+"I will attend"
+
+On/near shift:
+Coordinator can mark:
+- Present
+- Late
+- Absent
+
+Potential future improvements:
+- Location verification
+- QR attendance
+- Employer confirmation
+- Time-based check-in
+- Geofencing
+
+Do NOT overbuild attendance in v0.1.
+
+============================================================
+16. WORK HISTORY
+============================================================
+
+After a job is completed, the worker's history should update.
+
+Example:
+
+Worker:
+Completed jobs: 12
+Event jobs: 5
+Stock counting: 4
+Handbill distribution: 3
+
+Each job can show:
+- Job type
+- Date
+- Employer
+- Attendance status
+- Completion status
+
+This is an important long-term feature because it creates a trusted
+professional identity for part-time workers.
+
+============================================================
+17. REPUTATION / RATINGS
+============================================================
+
+Do not build a complicated scoring algorithm initially.
+
+V0.1 can record simple ratings/feedback.
+
+Long-term, two-sided reputation is important:
+
+WORKER -> EMPLOYER
+- Payment reliability
+- Communication
+- Job accuracy
+- Treatment of workers
+
+EMPLOYER -> WORKER
+- Attendance
+- Punctuality
+- Work quality
+- Behaviour
+- Reliability
+
+Potential future worker profile:
+Verified
+Completed jobs: 23
+Attendance: 96%
+Employer rating: 4.8
+
+Potential future employer profile:
+Verified
+Jobs completed: 84
+Worker rating: 4.7
+
+Do not expose potentially unfair or sensitive scoring without careful
+design. Ratings should be explainable and have dispute/appeal mechanisms
+later.
+
+============================================================
+18. PAYMENTS
+============================================================
+
+INITIAL BUSINESS MODEL:
+
+EMPLOYER PAYS PER SUCCESSFUL HIRE.
+
+The platform should eventually charge a fee for each successfully
+completed worker assignment.
+
+Example (ILLUSTRATIVE ONLY):
+20 completed workers x Rs. 300 platform fee = Rs. 6,000 platform revenue.
+
+Do not hard-code Rs. 300. Make the platform fee configurable.
+
+Important distinction:
+"Successful hire" should eventually be defined operationally, e.g. a
+worker who was assigned and successfully completed the agreed shift.
+
+V0.1 PAYMENT SCOPE:
+- Record agreed worker pay.
+- Record platform fee.
+- Record employer payment status.
+- Record worker payment status.
+- Allow coordinator to mark payments.
+- Provide basic payment summary.
+
+Do NOT implement a real payment gateway in the first prototype unless
+required for pilot validation.
+
+FUTURE:
+Employer prepayment/escrow-like authorization could improve trust:
+Employer commits the staffing funds -> attendance/completion ->
+worker payment release.
+
+This requires proper payment-provider, legal, accounting and regulatory
+analysis before implementation.
+
+============================================================
+19. NOTIFICATIONS
+============================================================
+
+Notifications are essential.
+
+V0.1 can use:
+- In-app notifications
+- Email where practical
+- SMS/WhatsApp integration only if simple and appropriate
+
+Important events:
+- New matching job
+- Application received
+- Selected
+- Assignment confirmed
+- Job almost full
+- Job full
+- Worker cancellation
+- Replacement opportunity
+- Attendance reminder
+- Job starting soon
+- Job completed
+- Payment status update
+
+Design notifications as a service abstraction so channels can be added
+later without rewriting business logic.
+
+============================================================
+20. COORDINATOR DASHBOARD
+============================================================
+
+The coordinator dashboard is the most important v0.1 interface.
+
+Dashboard should show:
+
+TODAY'S JOBS
+
+Example:
+
+Event A
+24 / 25 confirmed
+Status: PARTIALLY FILLED
+
+Hotel B
+18 / 20 confirmed
+Status: PARTIALLY FILLED
+
+Stock Count C
+10 / 10 confirmed
+Status: FULL
+
+Useful metrics:
+- Active jobs
+- Jobs today
+- Jobs this week
+- Total workers
+- Available workers
+- Unfilled positions
+- Pending applications
+- Cancellations
+- Replacement requests
+- Attendance issues
+- Payment pending
+
+Coordinator should be able to:
+- Approve/reject employers
+- Approve/reject jobs
+- View workers
+- Verify workers
+- Search/filter workers
+- Create/edit jobs
+- Assign workers
+- Remove/cancel assignments
+- Trigger replacement
+- Mark attendance
+- Mark completion
+- Record payments
+- Add notes
+- Override automated decisions
+
+The dashboard should make it possible to understand the entire operation
+without opening WhatsApp.
+
+============================================================
+21. EMPLOYER DASHBOARD
+============================================================
+
+Employer should see:
+
+- Active jobs
+- Create job
+- Job status
+- Required headcount
+- Confirmed headcount
+- Applicants
+- Selected workers
+- Worker basic profile/history
+- Attendance status
+- Completed jobs
+- Payment status
+
+Example:
+
+EVENT ASSISTANTS
+Saturday
+20 required
+18 confirmed
+2 vacancies
+
+[View Workers]
+[Request More]
+[Cancel Job]
+
+Keep this simple.
+
+============================================================
+22. WORKER DASHBOARD
+============================================================
+
+Worker home screen should prioritize:
+
+- Matching/open jobs
+- Upcoming confirmed jobs
+- Attendance actions
+- Recent work history
+- Profile completion
+- Notifications
+
+Example:
+
+GOOD MORNING 👋
+
+3 jobs match your preferences
+
+[Event Helper]
+Saturday
+Colombo
+Rs. 3,500
+8 AM - 6 PM
+
+[Apply]
+
+UPCOMING:
+Event Assistant
+Saturday
+Confirmed ✅
+
+[Confirm Attendance]
+
+============================================================
+23. SEARCH / FILTERING
+============================================================
+
+Workers should be able to filter:
+- Job category
+- Date
+- Location
+- Pay
+- Duration
+- Preferred job types
+
+Employers/coordinator should be able to filter workers by:
+- Availability
+- Location
+- Skills
+- Job history
+- Category experience
+- Verification status
+- Existing assignment/conflict
+
+Avoid complex search engines in v0.1.
+
+Normal database filtering is sufficient.
+
+============================================================
+24. BASIC MATCHING LOGIC
+============================================================
+
+V0.1 matching should be deterministic.
+
+Potential eligibility conditions:
+
+1. Worker is active/verified.
+2. Worker is available on job date/time.
+3. Worker is not already assigned to a conflicting job.
+4. Worker is within preferred/geographic range if location is available.
+5. Worker has required skills where applicable.
+6. Worker prefers the job category.
+
+Then rank candidates using simple configurable factors:
+- Category preference
+- Distance/proximity
+- Previous experience
+- Reliability/attendance
+- Recent workload
+
+Do NOT call this AI.
+
+The goal is predictable and explainable behaviour.
+
+============================================================
+25. DATABASE CONCEPT
+============================================================
+
+Suggested entities:
+
+User
+WorkerProfile
+EmployerProfile
+CoordinatorProfile/Admin
+Job
+JobRequirement (optional if job model grows)
+Application
+Assignment
+Availability
+Attendance
+Notification
+Payment
+Rating/Feedback
+WorkHistory
+Verification
+AuditLog
+
+Relationships:
+
+User
+  -> WorkerProfile OR EmployerProfile OR Admin/Coordinator
+
+EmployerProfile
+  -> many Jobs
+
+Job
+  -> many Applications
+  -> many Assignments
+
+WorkerProfile
+  -> many Applications
+  -> many Assignments
+  -> many Attendance records
+  -> many WorkHistory records
+
+Assignment
+  -> Attendance
+  -> Payment
+  -> Feedback
+
+Use proper foreign keys and timestamps.
+
+============================================================
+26. SECURITY / ACCESS CONTROL
+============================================================
+
+Roles:
+
+WORKER
+EMPLOYER
+COORDINATOR
+ADMIN
+
+Workers must not see private information of other workers.
+
+Employers should only see worker information appropriate for staffing.
+
+Workers should not see sensitive employer information.
+
+Coordinator has operational management permissions.
+
+Admin has system-level permissions.
+
+Use server-side authorization for every protected operation.
+Do not rely on frontend hiding buttons.
+
+Passwords/authentication must be handled using established secure
+mechanisms. Never store plaintext passwords.
+
+Protect personal data and minimize unnecessary collection.
+
+============================================================
+27. AUDIT LOGGING
+============================================================
+
+Because this system manages real staffing, important changes should be
+traceable.
+
+Log events such as:
+- Job created
+- Job approved
+- Worker selected
+- Assignment cancelled
+- Replacement triggered
+- Attendance changed
+- Payment marked
+- Employer verified
+- Worker verified
+
+Store:
+- actor
+- action
+- target
+- timestamp
+- relevant metadata
+
+This will help debugging and resolving disputes.
+
+============================================================
+28. BUSINESS RULES
+============================================================
+
+Examples:
+
+- A worker cannot be assigned to overlapping jobs.
+- A cancelled assignment should free a position.
+- A completed assignment should count toward work history.
+- A no-show should be recorded.
+- A job cannot be marked FULL unless required positions are filled.
+- Coordinator can override automated assignment/refill.
+- Employer cannot arbitrarily edit a live job without preserving an audit
+  trail.
+- A worker cannot confirm attendance for a cancelled assignment.
+- Completed jobs should not silently change state.
+
+Make business rules backend-enforced.
+
+============================================================
+29. V0.1 USER JOURNEYS
+============================================================
+
+WORKER:
+
+Register
+-> Complete profile
+-> Select job preferences
+-> Set availability
+-> Browse/match jobs
+-> Apply
+-> Get selected
+-> Confirm assignment
+-> Confirm attendance
+-> Attend job
+-> Completion recorded
+-> Work history updated
+
+EMPLOYER:
+
+Register
+-> Verification
+-> Create job
+-> Submit staffing requirement
+-> Coordinator approves
+-> Receive applicants/worker suggestions
+-> Select workers
+-> Monitor confirmation
+-> Monitor attendance
+-> Job completed
+-> Payment recorded
+
+COORDINATOR:
+
+Login
+-> Dashboard
+-> Review new employer/job
+-> Approve
+-> Monitor applications
+-> Assign/approve workers
+-> Watch headcount
+-> Handle cancellations
+-> Trigger/approve replacement
+-> Monitor attendance
+-> Mark completion
+-> Record payment
+-> Review reports
+
+============================================================
+30. PILOT STRATEGY
+============================================================
+
+DO NOT launch publicly at first.
+
+Use the existing network.
+
+Initial pilot:
+- 1,500+ potential university-student workers
+- Existing coordinator
+- Existing small set of employers
+
+Pilot jobs:
+- Handbill distribution
+- Stock counting
+- Event helper
+- Crowd handling
+
+Pilot should begin with a limited number of real jobs.
+
+Recommended validation sequence:
+
+1. Digitize worker registration.
+2. Digitize job posting.
+3. Run a few jobs end-to-end.
+4. Measure worker adoption.
+5. Measure employer satisfaction.
+6. Measure coordinator time saved.
+7. Identify manual steps that still remain.
+8. Improve automation.
+9. Repeat.
+
+============================================================
+31. KEY METRICS
+============================================================
+
+WORKER METRICS:
+- Registered workers
+- Verified workers
+- Active workers
+- Profile completion
+- Applications per job
+- Assignment acceptance rate
+- Attendance rate
+- Cancellation rate
+- No-show rate
+- Completed jobs per worker
+
+EMPLOYER METRICS:
+- Registered employers
+- Verified employers
+- Jobs posted
+- Jobs successfully filled
+- Average time to fill
+- Repeat employers
+- Cancellation rate
+
+PLATFORM METRICS:
+- Jobs completed
+- Worker-shifts completed
+- Percentage of jobs fully staffed
+- Average number of replacements
+- Coordinator interventions per job
+- Coordinator time saved
+- Payment volume
+- Platform revenue
+- Revenue per completed worker-shift
+
+THE MOST IMPORTANT EARLY METRIC:
+Number/percentage of real jobs successfully completed through the system.
+
+============================================================
+32. MVP ACCEPTANCE CRITERIA
+============================================================
+
+V0.1 can be considered pilot-ready when:
+
+[ ] Worker can register/login.
+[ ] Worker can complete basic profile.
+[ ] Worker can select preferences/availability.
+[ ] Employer can register/login.
+[ ] Employer can submit a job.
+[ ] Coordinator can approve and manage jobs.
+[ ] Workers can see relevant jobs.
+[ ] Workers can apply.
+[ ] Coordinator/employer can select workers.
+[ ] Job headcount updates in real time/near-real time.
+[ ] Worker can confirm/cancel availability.
+[ ] Cancellation creates an open position.
+[ ] Replacement can be selected/triggered.
+[ ] Coordinator can see all active staffing status.
+[ ] Attendance can be recorded.
+[ ] Job can be marked completed.
+[ ] Work history is updated.
+[ ] Basic payment records can be maintained.
+[ ] Role-based access control works.
+[ ] Important actions are logged.
+[ ] System can survive at least a small real-world pilot.
+[ ] Basic backup/error handling exists.
+
+============================================================
+33. UX PRINCIPLES
+============================================================
+
+The target audience includes busy university students and small employers.
+
+Therefore:
+
+- Mobile-first responsive design.
+- Very simple language.
+- Minimal form fields.
+- Large obvious actions.
+- Clear dates/times/pay.
+- Avoid unnecessary screens.
+- Avoid technical terminology.
+- Show status visually.
+- Make the next action obvious.
+- Minimize typing.
+- Avoid notification overload.
+
+A worker should understand a job in a few seconds.
+
+Every job card should make these obvious:
+
+WHAT?
+WHEN?
+WHERE?
+HOW LONG?
+HOW MUCH?
+HOW MANY PEOPLE?
+WHAT DO I NEED TO DO?
+
+============================================================
+34. DESIGN DIRECTION
+============================================================
+
+Create a modern, trustworthy and friendly interface.
+
+Avoid making it look like an old corporate HR portal.
+
+Potential visual direction:
+- Clean
+- Modern
+- Mobile-first
+- Trustworthy
+- Slightly energetic
+- Simple cards
+- Clear status indicators
+- Strong typography
+- Good whitespace
+
+The product should feel approachable to a university student but credible
+to a hotel/business owner.
+
+Do not spend excessive time on branding before workflow validation.
+
+============================================================
+35. TECHNICAL DIRECTION FOR CLAUDE CODE
+============================================================
+
+Claude Code should first inspect the project directory and existing files
+before making architectural assumptions.
+
+Recommended development philosophy:
+
+- Keep architecture simple.
+- Prefer a modular monolith for v0.1.
+- REST API or similarly clear API boundary.
+- Relational database.
+- Proper migrations.
+- Environment variables for secrets/configuration.
+- Docker support if practical.
+- Separate frontend/backend concerns if using separate applications.
+- Automated tests for critical business logic.
+- Seed/demo data for local development.
+- Clear README and setup instructions.
+
+The exact stack is intentionally NOT fixed in this product brief.
+
+Choose a practical, maintainable stack based on:
+- Development speed
+- Claude Code compatibility
+- Team familiarity
+- Mobile-first web support
+- Database reliability
+- Deployment simplicity
+- Cost
+
+Do not introduce microservices unless there is a concrete reason.
+
+============================================================
+36. DEVELOPMENT APPROACH
+============================================================
+
+Implement incrementally.
+
+PHASE 1:
+Project setup
+- Repository structure
+- Authentication
+- Database
+- Roles
+- Basic UI shell
+
+PHASE 2:
+Worker
+- Registration
+- Profile
+- Preferences
+- Availability
+- Job browsing
+
+PHASE 3:
+Employer
+- Registration
+- Verification
+- Job creation
+- Job management
+
+PHASE 4:
+Coordinator
+- Dashboard
+- Job approval
+- Worker management
+- Assignment management
+
+PHASE 5:
+Core staffing lifecycle
+- Applications
+- Selection
+- Confirmation
+- Cancellation
+- Replacement
+- Attendance
+- Completion
+
+PHASE 6:
+History/payment tracking
+- Work history
+- Basic payment records
+- Reports
+
+PHASE 7:
+Pilot hardening
+- Error handling
+- Security
+- Audit logs
+- Testing
+- Backups
+- UX cleanup
+- Deployment
+
+After each phase:
+- Run tests.
+- Review UX.
+- Check database integrity.
+- Commit changes.
+- Document important decisions.
+
+============================================================
+37. IMPORTANT PRODUCT DECISIONS
+============================================================
+
+CURRENT DECISIONS:
+
+1. Initial users are primarily university undergraduates.
+2. Existing network contains 2,000+ people.
+3. Initial pilot target is at least 1,500 workers.
+4. Initial job categories are:
+   - Handbill distribution
+   - Stock counting
+   - Event helper
+   - Crowd handling
+5. Initial employer types include:
+   - Tuition teachers
+   - Flower shops
+   - Hotels
+   - Spare-parts companies
+6. Existing coordinator will be the first operational administrator.
+7. Coordinator's current manual workflow is the process being digitized.
+8. Initial revenue model is employer pays per successful hire.
+9. Payment gateway is NOT required for v0.1.
+10. Simple deterministic matching is preferred over AI.
+11. Responsive web/PWA is preferred for v0.1.
+12. Existing users/employers will be used for pilot validation.
+13. The platform should eventually support two-sided reputation.
+14. Auto-refill/replacement is a core desired feature.
+15. The coordinator must retain manual override/control.
+
+============================================================
+38. FUTURE PRODUCT DIRECTION (NOT V0.1)
+============================================================
+
+Possible future features:
+
+- Native mobile apps
+- Automated matching/recommendations
+- Advanced worker reputation
+- Employer reputation
+- Online payments
+- Prepaid staffing funds
+- Automated worker payouts
+- QR attendance
+- Location-based attendance
+- Geofencing
+- WhatsApp integration
+- SMS integration
+- Recurring jobs
+- Employer subscriptions
+- Featured/urgent jobs
+- Bulk staffing
+- Analytics
+- Workforce forecasting
+- Multi-language support (Sinhala/English initially may be valuable)
+- Worker verification improvements
+- Dispute resolution
+- Fraud prevention
+- Automated payroll-like calculations
+
+These are future ideas, not requirements for v0.1.
+
+============================================================
+39. PRODUCT PHILOSOPHY
+============================================================
+
+The platform should not try to automate everything immediately.
+
+The correct progression is:
+
+MANUAL
+  ->
+DIGITIZED
+  ->
+ASSISTED
+  ->
+AUTOMATED
+  ->
+OPTIMIZED
+
+First understand the process.
+Then digitize it.
+Then automate repetitive pieces.
+Then optimize using real usage data.
+
+Do not build speculative features simply because they sound impressive.
+
+============================================================
+40. MOST IMPORTANT QUESTION FOR DEVELOPMENT
+============================================================
+
+At every implementation decision, ask:
+
+"Does this help us successfully coordinate a REAL part-time job?"
+
+If yes:
+consider it.
+
+If not:
+defer it unless it is required infrastructure.
+
+The first real victory is not:
+"Beautiful app launched."
+
+The first real victory is:
+
+An employer requests 20 workers.
+The system finds/contacts suitable workers.
+20 workers are confirmed.
+A cancellation happens.
+The system helps replace that worker.
+The coordinator monitors the process from one dashboard.
+The workers attend.
+The job is completed.
+The records are stored.
+
+If we can do that reliably, we have the foundation of the product.
+
+============================================================
+41. CLAUDE CODE INSTRUCTION
+============================================================
+
+Treat this document as the product context for the initial implementation.
+
+Before coding:
+1. Inspect the repository.
+2. Identify whether any existing code exists.
+3. Propose a concise technical architecture.
+4. Identify assumptions that require clarification.
+5. Create a development plan.
+6. Implement the MVP incrementally.
+
+Do not blindly implement every future idea in this document.
+
+Prioritize:
+A. Core workflow
+B. Data integrity
+C. Authentication/authorization
+D. Coordinator usability
+E. Worker usability
+F. Employer usability
+G. Pilot readiness
+
+When a product decision is ambiguous, choose the simplest implementation
+that preserves future extensibility and document the decision.
+
+Do not replace the core workflow with a generic job-board implementation.
+
+The defining feature of this project is:
+REAL-TIME PART-TIME STAFFING COORDINATION.
+
+============================================================
+END OF PRODUCT BLUEPRINT V0.1
+============================================================
