@@ -78,12 +78,27 @@ job-creation UI yet (Phase 3).
   concern once assignments/cancellations exist. A `isPreferredCategory`
   flag badges jobs matching the worker's stated preferences, but there's no
   ranking or auto-matching yet.
-- **Timezone**: all job date/time handling currently assumes the process
-  runs in Sri Lanka time (true for local dev). Phase 3's real job-creation
-  form needs to pin this explicitly to `Asia/Colombo` rather than relying on
-  server-local time, since production will likely run in UTC (Vercel).
-  `prisma/seed.ts` has a worked example of the `@db.Date` pitfall this
-  causes if you build date-only values from a time-of-day-bearing `Date`.
+- **Timezone**: job date/time input is now explicitly pinned to Sri Lanka
+  time (`src/lib/sri-lanka-time.ts`, fixed UTC+5:30 offset, no DST) rather
+  than relying on server-local time — this holds regardless of what
+  timezone the server process itself runs in (local dev happens to be
+  Asia/Colombo; production/Vercel will be UTC). `prisma/seed.ts` still has
+  the worked postmortem of the `@db.Date` pitfall that motivated this.
+- **Job creation is DRAFT-first.** An employer's job starts as `DRAFT`
+  (freely editable), and only becomes `PENDING_APPROVAL` via an explicit
+  "Submit for approval" action (`POST /api/employer/jobs/[id]/submit`).
+  Editing is blocked once submitted — blueprint §28 requires a *live* job's
+  edits to preserve an audit trail, which is more than v0.1 needs; cancel
+  and recreate is the escape hatch for now. Cancelling
+  (`POST /api/employer/jobs/[id]/cancel`) is allowed from any non-terminal
+  status. Every employer job route re-checks `job.employerId` against the
+  caller's own `EmployerProfile` (`src/server/employers/guard.ts`) —
+  `requireRole("EMPLOYER")` alone only proves "some employer".
+- **There is no coordinator approval UI yet (Phase 4).** A submitted job
+  sits in `PENDING_APPROVAL` and is invisible to workers until a
+  coordinator moves it to `OPEN` — that action doesn't exist yet, so
+  employer-created jobs are a dead end until Phase 4 ships. The 3 seeded
+  demo jobs bypass this by being inserted directly as `OPEN`.
 
 ## Build phases (see blueprint §36)
 
@@ -93,7 +108,11 @@ job-creation UI yet (Phase 3).
 - [x] **Phase 2** — worker profile completion (`/worker/onboarding`),
       preferences and weekly availability, job browsing with category
       filter (`/api/jobs`), and applying to a job (`/api/jobs/[id]/apply`).
-- [ ] Phase 3 — employer registration/verification, job creation/management
+- [x] **Phase 3** — employer profile completion (`/employer/onboarding`),
+      job posting as DRAFT (`/employer/jobs/new`), editing drafts, submitting
+      for approval, and cancelling (`/employer` job list + actions).
+      Verification stays informational only for now — coordinator
+      approve/reject actions are Phase 4.
 - [ ] Phase 4 — coordinator dashboard: job approval, worker management, assignment
 - [ ] Phase 5 — core staffing lifecycle: applications, selection, confirmation,
       cancellation, replacement, attendance, completion

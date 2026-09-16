@@ -18,4 +18,18 @@ export const WORKER_SELECTABLE_CATEGORIES: JobCategory[] = [
   "CROWD_HANDLING",
 ];
 
+// Employers posting a job can pick OTHER too — the pilot's four categories
+// are what we expect and optimize for (§3), not a hard restriction on what
+// an employer is allowed to request.
+export const ALL_JOB_CATEGORIES: JobCategory[] = [...WORKER_SELECTABLE_CATEGORIES, "OTHER"];
+
+export const EMPLOYER_TYPE_LABELS: Record<string, string> = {
+  TUITION: "Tuition / education",
+  FLOWER_SHOP: "Flower shop",
+  HOTEL: "Hotel",
+  SPARE_PARTS_COMPANY: "Spare parts company",
+  EVENT_ORGANIZER: "Event organizer",
+  OTHER: "Other",
+};
+
 export const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
