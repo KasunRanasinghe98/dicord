@@ -6,6 +6,7 @@ import type { JobCategory } from "@prisma/client";
 import { JOB_CATEGORY_LABELS, WORKER_SELECTABLE_CATEGORIES, DAY_LABELS } from "@/lib/constants";
 
 export interface ProfileFormValues {
+  nic: string;
   fullName: string;
   university: string;
   location: string;
@@ -18,6 +19,7 @@ export interface ProfileFormValues {
 }
 
 const EMPTY: ProfileFormValues = {
+  nic: "",
   fullName: "",
   university: "",
   location: "",
@@ -75,6 +77,18 @@ export function ProfileForm({ initial }: { initial: ProfileFormValues | null }) 
 
   return (
     <div className="space-y-5">
+      <Field
+        label="NIC number"
+        hint="Used to confirm you're a real, unique person — e.g. 912345678V or 199212345678"
+      >
+        <input
+          type="text"
+          value={values.nic}
+          onChange={(e) => setValues((v) => ({ ...v, nic: e.target.value }))}
+          className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+        />
+      </Field>
+
       <Field label="Full name">
         <input
           type="text"
@@ -181,7 +195,7 @@ export function ProfileForm({ initial }: { initial: ProfileFormValues | null }) 
 
       <button
         type="button"
-        disabled={saving || values.fullName.trim().length === 0}
+        disabled={saving || values.fullName.trim().length === 0 || values.nic.trim().length === 0}
         onClick={save}
         className="w-full rounded-lg bg-neutral-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
       >

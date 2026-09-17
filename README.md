@@ -163,6 +163,21 @@ job-creation UI yet (Phase 3).
   coordinator; an employer can cancel their own `OPEN`+ job, but a
   coordinator overriding *someone else's* live job has no endpoint yet.
   Left for Phase 7 hardening unless a real need surfaces sooner.
+- **Worker NIC is the real duplicate-registration guard, not the phone
+  number.** `WorkerProfile.nic` is required and unique at the DB level
+  (`src/lib/nic.ts` validates both the old 9-digit+V/X and new 12-digit Sri
+  Lankan formats). Phone numbers are how a worker logs in, but they're
+  cheap to acquire multiples of; NIC is what actually stops one person
+  registering several times under different numbers to appear as several
+  workers — verified end-to-end by trying to save the same NIC under two
+  different phone-registered accounts and getting a 409. Surfaced on
+  `/coordinator/workers` so the coordinator can cross-check it during
+  verification. This required a schema change after the pilot's worth of
+  local dev data already existed (no NIC on existing rows) — handled by
+  resetting the local dev database (explicit user consent required and
+  given; Prisma's CLI itself refuses destructive commands from an AI agent
+  without it) rather than a backfill migration, since there's no real user
+  data yet to preserve.
 
 ## Build phases (see blueprint §36)
 

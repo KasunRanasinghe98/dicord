@@ -63,7 +63,7 @@ export default async function CoordinatorWorkersPage({
               <div>
                 <h3 className="text-sm font-semibold">{w.fullName}</h3>
                 <p className="text-xs text-neutral-500">
-                  {w.user.phone} {w.university ? `· ${w.university}` : ""}
+                  NIC {w.nic} · {w.user.phone} {w.university ? `· ${w.university}` : ""}
                 </p>
               </div>
               <span className="whitespace-nowrap rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-medium text-neutral-600">

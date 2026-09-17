@@ -24,6 +24,7 @@ export default async function WorkerOnboardingPage() {
         initial={
           profile
             ? {
+                nic: profile.nic,
                 fullName: profile.fullName,
                 university: profile.university ?? "",
                 location: profile.location ?? "",

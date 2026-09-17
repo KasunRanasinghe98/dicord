@@ -193,6 +193,11 @@ model WorkerProfile {
   id                   String              @id @default(cuid())
   userId               String              @unique
   user                 User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // The real identity anchor. Phone numbers are how a worker logs in, but
+  // they're cheap to acquire multiple of — NIC is what actually stops one
+  // person registering several times to appear as several workers. Unique
+  // at the DB level, not just checked in application code.
+  nic                  String              @unique
   fullName             String
   profilePhotoUrl      String?
   location             String?

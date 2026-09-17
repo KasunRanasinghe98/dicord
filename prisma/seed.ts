@@ -24,6 +24,7 @@ async function main() {
     update: {},
     create: {
       userId: workerUser.id,
+      nic: "199912345678",
       fullName: "Nimal Perera",
       university: "University of Colombo",
       preferredCategories: ["EVENT_HELPER", "STOCK_COUNTING"],

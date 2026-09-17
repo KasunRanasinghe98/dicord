@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { Prisma, JobCategory } from "@prisma/client";
 import { db } from "@/server/db";
 import { requireRole } from "@/server/auth/guard";
 import { parseCsvList } from "@/lib/csv";
-import { JobCategory } from "@prisma/client";
+import { normalizeNic } from "@/lib/nic";
 
 const bodySchema = z.object({
+  nic: z.string().trim().min(1, "NIC is required."),
   fullName: z.string().trim().min(1, "Full name is required."),
   university: z.string().trim().optional(),
   location: z.string().trim().optional(),
@@ -44,47 +46,66 @@ export async function POST(request: Request) {
 
   const data = parsed.data;
 
-  const profile = await db.$transaction(async (tx) => {
-    const saved = await tx.workerProfile.upsert({
-      where: { userId: auth.session.userId },
-      update: {
-        fullName: data.fullName,
-        university: data.university || null,
-        location: data.location || null,
-        preferredAreas: parseCsvList(data.preferredAreas),
-        preferredCategories: data.preferredCategories,
-        skills: parseCsvList(data.skills),
-        languages: parseCsvList(data.languages),
-        transportAvailable: data.transportAvailable,
-      },
-      create: {
-        userId: auth.session.userId,
-        fullName: data.fullName,
-        university: data.university || null,
-        location: data.location || null,
-        preferredAreas: parseCsvList(data.preferredAreas),
-        preferredCategories: data.preferredCategories,
-        skills: parseCsvList(data.skills),
-        languages: parseCsvList(data.languages),
-        transportAvailable: data.transportAvailable,
-      },
+  let nic: string;
+  try {
+    nic = normalizeNic(data.nic);
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 400 });
+  }
+
+  try {
+    const profile = await db.$transaction(async (tx) => {
+      const saved = await tx.workerProfile.upsert({
+        where: { userId: auth.session.userId },
+        update: {
+          nic,
+          fullName: data.fullName,
+          university: data.university || null,
+          location: data.location || null,
+          preferredAreas: parseCsvList(data.preferredAreas),
+          preferredCategories: data.preferredCategories,
+          skills: parseCsvList(data.skills),
+          languages: parseCsvList(data.languages),
+          transportAvailable: data.transportAvailable,
+        },
+        create: {
+          userId: auth.session.userId,
+          nic,
+          fullName: data.fullName,
+          university: data.university || null,
+          location: data.location || null,
+          preferredAreas: parseCsvList(data.preferredAreas),
+          preferredCategories: data.preferredCategories,
+          skills: parseCsvList(data.skills),
+          languages: parseCsvList(data.languages),
+          transportAvailable: data.transportAvailable,
+        },
+      });
+
+      // Simplest correct way to keep this small table in sync with the
+      // checkbox grid: replace the set of available days each save.
+      await tx.workerAvailability.deleteMany({ where: { workerProfileId: saved.id } });
+      if (data.availableDays.length > 0) {
+        await tx.workerAvailability.createMany({
+          data: data.availableDays.map((dayOfWeek) => ({
+            workerProfileId: saved.id,
+            dayOfWeek,
+            isAvailable: true,
+          })),
+        });
+      }
+
+      return saved;
     });
 
-    // Simplest correct way to keep this small table in sync with the
-    // checkbox grid: replace the set of available days each save.
-    await tx.workerAvailability.deleteMany({ where: { workerProfileId: saved.id } });
-    if (data.availableDays.length > 0) {
-      await tx.workerAvailability.createMany({
-        data: data.availableDays.map((dayOfWeek) => ({
-          workerProfileId: saved.id,
-          dayOfWeek,
-          isAvailable: true,
-        })),
-      });
+    return NextResponse.json({ ok: true, profile });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      return NextResponse.json(
+        { error: "This NIC is already registered to another account." },
+        { status: 409 },
+      );
     }
-
-    return saved;
-  });
-
-  return NextResponse.json({ ok: true, profile });
+    throw err;
+  }
 }
