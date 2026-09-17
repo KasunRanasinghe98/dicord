@@ -2,9 +2,11 @@ import Link from "next/link";
 import { getSession } from "@/server/auth/session";
 import { db } from "@/server/db";
 import { getOpenJobsForWorker } from "@/server/jobs/queries";
+import { getWorkHistorySummary } from "@/server/workers/history";
 import { LogoutButton } from "@/app/logout-button";
 import { ActionButton } from "@/app/action-button";
 import { formatStatus } from "@/lib/format";
+import { JOB_CATEGORY_LABELS } from "@/lib/constants";
 import { JobsBrowser } from "./jobs-browser";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +17,7 @@ export default async function WorkerDashboardPage() {
     ? await db.workerProfile.findUnique({ where: { userId: session.userId } })
     : null;
 
-  const [jobs, myApplications, upcomingAssignments] = await Promise.all([
+  const [jobs, myApplications, upcomingAssignments, workHistory] = await Promise.all([
     session ? getOpenJobsForWorker(session.userId) : [],
     profile
       ? db.application.findMany({
@@ -32,6 +34,7 @@ export default async function WorkerDashboardPage() {
           orderBy: { confirmedAt: "desc" },
         })
       : [],
+    profile ? getWorkHistorySummary(profile.id) : null,
   ]);
 
   return (
@@ -98,6 +101,36 @@ export default async function WorkerDashboardPage() {
         <h2 className="text-sm font-medium text-neutral-500">Open jobs</h2>
         <JobsBrowser initialJobs={jobs} />
       </section>
+
+      {workHistory && workHistory.completedCount + workHistory.noShowCount > 0 && (
+        <section className="rounded-lg border border-neutral-200 p-4">
+          <h2 className="text-sm font-medium text-neutral-500">Work history</h2>
+          <div className="mt-2 grid grid-cols-2 gap-3 text-center">
+            <div>
+              <div className="text-xl font-semibold">{workHistory.completedCount}</div>
+              <div className="text-xs text-neutral-500">Jobs completed</div>
+            </div>
+            <div>
+              <div className="text-xl font-semibold">
+                {workHistory.attendanceRate === null
+                  ? "—"
+                  : `${Math.round(workHistory.attendanceRate * 100)}%`}
+              </div>
+              <div className="text-xs text-neutral-500">Attendance rate</div>
+            </div>
+          </div>
+          {Object.keys(workHistory.byCategory).length > 0 && (
+            <p className="mt-3 text-xs text-neutral-500">
+              {Object.entries(workHistory.byCategory)
+                .map(([category, count]) => `${JOB_CATEGORY_LABELS[category as keyof typeof JOB_CATEGORY_LABELS]}: ${count}`)
+                .join(" · ")}
+            </p>
+          )}
+          <p className="mt-2 text-xs text-neutral-500">
+            Rs. {workHistory.totalPaidOut.toFixed(2)} paid out of Rs. {workHistory.totalEarned.toFixed(2)} earned
+          </p>
+        </section>
+      )}
 
       <section className="rounded-lg border border-neutral-200 p-4">
         <h2 className="text-sm font-medium text-neutral-500">My applications</h2>

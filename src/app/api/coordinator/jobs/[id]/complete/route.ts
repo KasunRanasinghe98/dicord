@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/server/db";
 import { requireRole } from "@/server/auth/guard";
 import { assertJobTransition } from "@/server/jobs/state-machine";
+import { getPlatformFeePerWorker } from "@/lib/config";
 import { logAudit } from "@/server/audit/log";
 
 // The one place Application/Assignment status gets finalized based on
@@ -38,6 +39,19 @@ export async function POST(
       if (attended) {
         await tx.assignment.update({ where: { id: assignment.id }, data: { status: "COMPLETED" } });
         await tx.application.update({ where: { id: assignment.applicationId }, data: { status: "COMPLETED" } });
+        // Blueprint §18: a "successful hire" is a worker who was assigned
+        // and completed the shift — a NO_SHOW never generates a Payment.
+        // The fee is a snapshot of the configured rate at completion time,
+        // not a live reference, so past records don't shift if the rate
+        // changes later.
+        await tx.payment.create({
+          data: {
+            jobId: id,
+            assignmentId: assignment.id,
+            workerPayAmount: job.payPerWorker,
+            platformFeeAmount: getPlatformFeePerWorker(),
+          },
+        });
       } else {
         await tx.assignment.update({ where: { id: assignment.id }, data: { status: "NO_SHOW" } });
         await tx.application.update({ where: { id: assignment.applicationId }, data: { status: "NO_SHOW" } });

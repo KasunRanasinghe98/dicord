@@ -178,6 +178,31 @@ job-creation UI yet (Phase 3).
   given; Prisma's CLI itself refuses destructive commands from an AI agent
   without it) rather than a backfill migration, since there's no real user
   data yet to preserve.
+- **A Payment row is only created for a "successful hire"** (blueprint
+  §18): job completion (`POST /api/coordinator/jobs/[id]/complete`) creates
+  one per assignment that ends up `COMPLETED` (attended), never for a
+  `NO_SHOW` — the platform doesn't charge a fee for a worker who didn't
+  show up. `platformFeeAmount` is a snapshot of `PLATFORM_FEE_PER_WORKER`
+  at completion time (`src/lib/config.ts`), not a live reference, so past
+  records don't shift if the configured rate changes later.
+- **Payment tracking is a flat two-party PENDING→PAID toggle**
+  (`/coordinator/payments`, `POST .../mark-{employer,worker}-paid`) — no
+  payment gateway, matching blueprint §18's explicit v0.1 scope. The
+  `DISPUTED` status exists in the schema for later but has no UI yet.
+- **Work history stays derived, never stored** (the Phase 1 decision holds):
+  `src/server/workers/history.ts` is the one place that turns
+  `Assignment`/`Attendance`/`Payment` rows into a summary (completed count,
+  attendance rate, category breakdown, earned vs. paid-out), used by both
+  the worker's own dashboard and available for a future coordinator "view
+  worker" screen — so the two never present different numbers for the same
+  underlying data.
+- **Reports (`/coordinator/reports`) lead with blueprint §31's stated most
+  important early metric** — jobs completed vs. total — before any
+  reliability or revenue numbers. "Jobs fully staffed" isn't shown as its
+  own metric: there's no snapshot of headcount-at-shift-start to measure
+  against, so it would either be misleading or need new tracking; deferred
+  rather than approximated into something that looks more precise than it
+  is.
 
 ## Build phases (see blueprint §36)
 
@@ -203,6 +228,11 @@ job-creation UI yet (Phase 3).
       checks, worker/coordinator assignment cancellation with headcount
       resync, attendance marking, and job start/complete with attendance-
       based Application/Assignment finalization.
-- [ ] Phase 6 — work history, basic payment tracking, reports
+- [x] **Phase 6** — Payment records auto-created on job completion for
+      each successfully attended assignment (never for a no-show), a flat
+      PENDING→PAID toggle for both employer and worker sides
+      (`/coordinator/payments`), a derived work-history summary on the
+      worker dashboard, and a coordinator reports page
+      (`/coordinator/reports`) leading with jobs-completed/total.
 - [ ] Phase 7 — pilot hardening: error handling, security, audit logs, tests,
       backups, UX cleanup, deployment

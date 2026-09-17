@@ -19,6 +19,7 @@ export default async function CoordinatorDashboardPage() {
     unverifiedEmployerCount,
     pendingApplicationCount,
     activeJobCount,
+    pendingPaymentCount,
     pendingApprovalJobs,
     todaysJobs,
   ] = await Promise.all([
@@ -30,6 +31,9 @@ export default async function CoordinatorDashboardPage() {
     db.application.count({ where: { status: "APPLIED" } }),
     db.job.count({
       where: { status: { in: ["OPEN", "PARTIALLY_FILLED", "FULL", "CONFIRMATION", "IN_PROGRESS"] } },
+    }),
+    db.payment.count({
+      where: { OR: [{ employerPaymentStatus: "PENDING" }, { workerPaymentStatus: "PENDING" }] },
     }),
     db.job.findMany({
       where: { status: "PENDING_APPROVAL" },
@@ -53,6 +57,15 @@ export default async function CoordinatorDashboardPage() {
         <LogoutButton />
       </div>
 
+      <div className="flex gap-2">
+        <Link href="/coordinator/payments" className="text-xs text-neutral-500 underline">
+          Payments
+        </Link>
+        <Link href="/coordinator/reports" className="text-xs text-neutral-500 underline">
+          Reports
+        </Link>
+      </div>
+
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <Metric label="Active jobs" value={activeJobCount} href="/coordinator/jobs" />
         <Metric label="Pending approval" value={pendingApprovalJobs.length} highlight />
@@ -69,6 +82,12 @@ export default async function CoordinatorDashboardPage() {
           value={employerCount}
           href="/coordinator/employers"
           sublabel={unverifiedEmployerCount > 0 ? `${unverifiedEmployerCount} unverified` : undefined}
+        />
+        <Metric
+          label="Payments pending"
+          value={pendingPaymentCount}
+          href="/coordinator/payments"
+          highlight
         />
       </div>
 
