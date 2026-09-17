@@ -94,11 +94,26 @@ job-creation UI yet (Phase 3).
   status. Every employer job route re-checks `job.employerId` against the
   caller's own `EmployerProfile` (`src/server/employers/guard.ts`) —
   `requireRole("EMPLOYER")` alone only proves "some employer".
-- **There is no coordinator approval UI yet (Phase 4).** A submitted job
-  sits in `PENDING_APPROVAL` and is invisible to workers until a
-  coordinator moves it to `OPEN` — that action doesn't exist yet, so
-  employer-created jobs are a dead end until Phase 4 ships. The 3 seeded
-  demo jobs bypass this by being inserted directly as `OPEN`.
+- **Coordinator job approval closes the Phase 3 gap.**
+  `POST /api/coordinator/jobs/[id]/approve` (`PENDING_APPROVAL` -> `OPEN`)
+  and `.../reject` (`PENDING_APPROVAL` -> `CANCELLED`, with an optional
+  reason stored in `coordinatorNotes`) are the two actions that were
+  missing. `reject` is deliberately narrower than the state machine alone
+  allows — `CANCELLED` is reachable from most non-terminal statuses, but
+  "reject" specifically means declining a pending submission, not
+  cancelling a live job; that broader coordinator override isn't built yet.
+- **Worker/employer verification is a flat approve/reject action**
+  (`POST /api/coordinator/{workers,employers}/[id]/verify`), not a queue
+  with its own workflow — `verificationStatus` still doesn't gate anything
+  else in the system yet (an unverified worker can apply, an unverified
+  employer's jobs can still be approved). It's informational until a real
+  reason emerges to enforce it.
+- **Assignment/selection is deliberately not in Phase 4.** The blueprint
+  lists "Assignment management" under the coordinator phase, but selecting
+  applicants into confirmed assignments is really the start of the
+  Application -> Assignment state-machine work (blueprint §12–14), which
+  belongs with the rest of the staffing lifecycle in Phase 5, not bolted
+  onto the dashboard phase.
 
 ## Build phases (see blueprint §36)
 
@@ -113,7 +128,11 @@ job-creation UI yet (Phase 3).
       for approval, and cancelling (`/employer` job list + actions).
       Verification stays informational only for now — coordinator
       approve/reject actions are Phase 4.
-- [ ] Phase 4 — coordinator dashboard: job approval, worker management, assignment
+- [x] **Phase 4** — coordinator dashboard expanded with pending-approval
+      count, active jobs, pending applications, and today's jobs; job
+      approve/reject actions; worker and employer verification with
+      filterable lists (`/coordinator/workers`, `/coordinator/employers`).
+      Selecting workers into assignments is deferred to Phase 5.
 - [ ] Phase 5 — core staffing lifecycle: applications, selection, confirmation,
       cancellation, replacement, attendance, completion
 - [ ] Phase 6 — work history, basic payment tracking, reports

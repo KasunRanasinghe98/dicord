@@ -3,17 +3,10 @@ import { getSession } from "@/server/auth/session";
 import { db } from "@/server/db";
 import { LogoutButton } from "@/app/logout-button";
 import { JOB_CATEGORY_LABELS } from "@/lib/constants";
+import { formatStatus } from "@/lib/format";
 import { JobActions } from "./job-actions";
 
 export const dynamic = "force-dynamic";
-
-function formatStatus(status: string) {
-  return status
-    .toLowerCase()
-    .split("_")
-    .map((w) => w[0].toUpperCase() + w.slice(1))
-    .join(" ");
-}
 
 export default async function EmployerDashboardPage() {
   const session = await getSession();
