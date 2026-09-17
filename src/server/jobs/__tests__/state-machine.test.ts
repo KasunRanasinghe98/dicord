@@ -6,6 +6,8 @@ import {
   deriveHeadcountStatus,
   isOpenForApplications,
   canTransitionApplication,
+  canTransitionAssignment,
+  assertAssignmentTransition,
 } from "@/server/jobs/state-machine";
 
 describe("job state machine", () => {
@@ -20,6 +22,27 @@ describe("job state machine", () => {
 
   it("allows a FULL job to drop back to PARTIALLY_FILLED on a late cancellation", () => {
     expect(canTransitionJob("FULL", "PARTIALLY_FILLED")).toBe(true);
+  });
+
+  it("allows headcount to unravel all the way back to OPEN from any fill level", () => {
+    // Every confirmed worker can cancel, in which case the job has zero
+    // confirmed workers again and must be able to say so.
+    expect(canTransitionJob("PARTIALLY_FILLED", "OPEN")).toBe(true);
+    expect(canTransitionJob("FULL", "OPEN")).toBe(true);
+    expect(canTransitionJob("CONFIRMATION", "OPEN")).toBe(true);
+  });
+
+  it("allows a locked-in CONFIRMATION job to fall back to any headcount status", () => {
+    expect(canTransitionJob("CONFIRMATION", "PARTIALLY_FILLED")).toBe(true);
+    expect(canTransitionJob("CONFIRMATION", "FULL")).toBe(true);
+  });
+
+  it("lets a coordinator start a job that's only PARTIALLY_FILLED, not just FULL", () => {
+    // Caught via manual end-to-end testing: "Start job" only worked from
+    // FULL because CONFIRMATION wasn't reachable from PARTIALLY_FILLED/OPEN,
+    // even though running short-staffed is a legitimate coordinator call.
+    expect(canTransitionJob("PARTIALLY_FILLED", "CONFIRMATION")).toBe(true);
+    expect(canTransitionJob("OPEN", "CONFIRMATION")).toBe(true);
   });
 
   it("rejects skipping straight from DRAFT to COMPLETED", () => {
@@ -64,5 +87,19 @@ describe("application state machine", () => {
 
   it("a cancelled application cannot be revived", () => {
     expect(canTransitionApplication("CANCELLED", "CONFIRMED")).toBe(false);
+  });
+});
+
+describe("assignment state machine", () => {
+  it("allows CONFIRMED to resolve to any of the three outcomes", () => {
+    expect(canTransitionAssignment("CONFIRMED", "CANCELLED")).toBe(true);
+    expect(canTransitionAssignment("CONFIRMED", "COMPLETED")).toBe(true);
+    expect(canTransitionAssignment("CONFIRMED", "NO_SHOW")).toBe(true);
+  });
+
+  it("treats every outcome as terminal — no revising history", () => {
+    expect(canTransitionAssignment("COMPLETED", "CONFIRMED")).toBe(false);
+    expect(canTransitionAssignment("NO_SHOW", "COMPLETED")).toBe(false);
+    expect(() => assertAssignmentTransition("CANCELLED", "CONFIRMED")).toThrow();
   });
 });

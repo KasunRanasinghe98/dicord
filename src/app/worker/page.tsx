@@ -3,6 +3,8 @@ import { getSession } from "@/server/auth/session";
 import { db } from "@/server/db";
 import { getOpenJobsForWorker } from "@/server/jobs/queries";
 import { LogoutButton } from "@/app/logout-button";
+import { ActionButton } from "@/app/action-button";
+import { formatStatus } from "@/lib/format";
 import { JobsBrowser } from "./jobs-browser";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +15,7 @@ export default async function WorkerDashboardPage() {
     ? await db.workerProfile.findUnique({ where: { userId: session.userId } })
     : null;
 
-  const [jobs, myApplications] = await Promise.all([
+  const [jobs, myApplications, upcomingAssignments] = await Promise.all([
     session ? getOpenJobsForWorker(session.userId) : [],
     profile
       ? db.application.findMany({
@@ -21,6 +23,13 @@ export default async function WorkerDashboardPage() {
           include: { job: { select: { title: true, date: true } } },
           orderBy: { appliedAt: "desc" },
           take: 10,
+        })
+      : [],
+    profile
+      ? db.assignment.findMany({
+          where: { workerProfileId: profile.id, status: "CONFIRMED" },
+          include: { job: { select: { title: true, date: true, location: true } }, attendance: true },
+          orderBy: { confirmedAt: "desc" },
         })
       : [],
   ]);
@@ -52,6 +61,39 @@ export default async function WorkerDashboardPage() {
         </div>
       )}
 
+      {upcomingAssignments.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-sm font-medium text-neutral-500">Upcoming shifts</h2>
+          {upcomingAssignments.map((a) => (
+            <div key={a.id} className="rounded-lg border border-neutral-200 p-4">
+              <h3 className="text-sm font-semibold">{a.job.title}</h3>
+              <p className="text-xs text-neutral-500">{a.job.location}</p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                {a.attendance?.status === "PENDING" ? (
+                  <ActionButton
+                    endpoint={`/api/worker/assignments/${a.id}/confirm-attendance`}
+                    label="Confirm attendance"
+                    pendingLabel="Confirming..."
+                    variant="primary"
+                  />
+                ) : (
+                  <span className="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700">
+                    {a.attendance ? formatStatus(a.attendance.status) : "Confirmed"}
+                  </span>
+                )}
+                <ActionButton
+                  endpoint={`/api/worker/assignments/${a.id}/cancel`}
+                  label="Cancel"
+                  pendingLabel="Cancelling..."
+                  variant="danger"
+                  confirmMessage="Cancel this confirmed shift? The position will be reopened."
+                />
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
+
       <section className="space-y-3">
         <h2 className="text-sm font-medium text-neutral-500">Open jobs</h2>
         <JobsBrowser initialJobs={jobs} />
@@ -62,11 +104,29 @@ export default async function WorkerDashboardPage() {
         {myApplications.length === 0 ? (
           <p className="mt-2 text-sm text-neutral-400">You haven&apos;t applied to any jobs yet.</p>
         ) : (
-          <ul className="mt-2 space-y-2">
+          <ul className="mt-2 space-y-3">
             {myApplications.map((app) => (
-              <li key={app.id} className="flex items-center justify-between text-sm">
-                <span>{app.job.title}</span>
-                <span className="text-xs text-neutral-500">{app.status}</span>
+              <li key={app.id}>
+                <div className="flex items-center justify-between text-sm">
+                  <span>{app.job.title}</span>
+                  <span className="text-xs text-neutral-500">{formatStatus(app.status)}</span>
+                </div>
+                {app.status === "SELECTED" && (
+                  <div className="mt-1 flex gap-2">
+                    <ActionButton
+                      endpoint={`/api/worker/applications/${app.id}/confirm`}
+                      label="Confirm"
+                      pendingLabel="Confirming..."
+                      variant="primary"
+                    />
+                    <ActionButton
+                      endpoint={`/api/worker/applications/${app.id}/decline`}
+                      label="Decline"
+                      pendingLabel="Declining..."
+                      variant="danger"
+                    />
+                  </div>
+                )}
               </li>
             ))}
           </ul>

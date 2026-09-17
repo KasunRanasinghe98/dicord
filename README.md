@@ -114,6 +114,55 @@ job-creation UI yet (Phase 3).
   Application -> Assignment state-machine work (blueprint §12–14), which
   belongs with the rest of the staffing lifecycle in Phase 5, not bolted
   onto the dashboard phase.
+- **Selection is two steps, not one: SELECTED then CONFIRMED.** A
+  coordinator selecting an applicant (`POST /api/coordinator/applications/
+  [id]/select`) only notifies the worker and waits — it does not create an
+  Assignment. That only happens when the worker themselves confirms
+  (`POST /api/worker/applications/[id]/confirm`), which is also the one
+  place an Assignment + Attendance row get created. This mirrors the
+  blueprint's worker journey (§29: "Get selected -> Confirm assignment") and
+  keeps "applied" from ever silently becoming "assigned" (§12).
+- **A direct replacement offer reuses the exact same mechanism as a normal
+  selection.** `POST /api/coordinator/jobs/[id]/offer` just creates an
+  Application straight at `SELECTED` (skipping `APPLIED`) for a worker who
+  never applied, so every step downstream — confirm, decline, conflict
+  checking, Assignment creation — is identical code to the normal path.
+  Suggestions are ranked using the matching engine
+  (`src/server/matching/build-candidate.ts` assembles real eligibility/score
+  input from the DB) against every active worker not already involved with
+  the job, not just other applicants — matching the blueprint's intent that
+  replacement search the wider pool (§14).
+- **Overlapping assignments are hard-blocked, not just soft-suggested.**
+  `hasSchedulingConflict()` (interval overlap against every other CONFIRMED
+  assignment) runs at both selection (soft — coordinator gets a warning) and
+  confirmation (hard — the worker's own confirm is rejected even if they
+  hold two simultaneous SELECTED offers), directly enforcing blueprint §28:
+  "a worker cannot be assigned to overlapping jobs."
+- **Attendance marking and job completion are split on purpose.**
+  `POST /api/coordinator/assignments/[id]/attendance` only records the raw
+  PRESENT/LATE/ABSENT fact — it never touches Application/Assignment status.
+  All of that finalization (→ `COMPLETED`/`NO_SHOW` on both records, which is
+  what work history will read from in Phase 6) happens exactly once, in
+  `POST /api/coordinator/jobs/[id]/complete`, based on whatever the final
+  attendance value turns out to be. One place decides "is this worker done",
+  not two independently.
+- **Found and fixed via real end-to-end testing, not by inspection:** the
+  Phase 1 job state graph only let headcount move forward
+  (`OPEN → PARTIALLY_FILLED → FULL`) and only let `FULL` reach
+  `CONFIRMATION`. Two real gaps this missed: (1) if every confirmed worker
+  cancels, a `PARTIALLY_FILLED`/`FULL`/`CONFIRMATION` job had nowhere legal
+  to go even though it legitimately has zero confirmed workers again: fixed
+  by making `OPEN`/`PARTIALLY_FILLED`/`FULL` mutually reachable. (2) "Start
+  job" only worked from `FULL`, even though running short-staffed from
+  `PARTIALLY_FILLED` is a legitimate coordinator call per §4 ("the
+  coordinator must retain manual override/control"): fixed by making
+  `CONFIRMATION` reachable from any headcount status. Both are covered by
+  new tests in `state-machine.test.ts`.
+- **Known gap, deferred:** there's no general "coordinator cancels a live
+  job" action — only `PENDING_APPROVAL` jobs can be rejected by the
+  coordinator; an employer can cancel their own `OPEN`+ job, but a
+  coordinator overriding *someone else's* live job has no endpoint yet.
+  Left for Phase 7 hardening unless a real need surfaces sooner.
 
 ## Build phases (see blueprint §36)
 
@@ -133,8 +182,12 @@ job-creation UI yet (Phase 3).
       approve/reject actions; worker and employer verification with
       filterable lists (`/coordinator/workers`, `/coordinator/employers`).
       Selecting workers into assignments is deferred to Phase 5.
-- [ ] Phase 5 — core staffing lifecycle: applications, selection, confirmation,
-      cancellation, replacement, attendance, completion
+- [x] **Phase 5** — core staffing lifecycle: coordinator selection
+      (`/coordinator/jobs/[id]`) and worker confirm/decline, replacement
+      offers backed by the matching engine, hard scheduling-conflict
+      checks, worker/coordinator assignment cancellation with headcount
+      resync, attendance marking, and job start/complete with attendance-
+      based Application/Assignment finalization.
 - [ ] Phase 6 — work history, basic payment tracking, reports
 - [ ] Phase 7 — pilot hardening: error handling, security, audit logs, tests,
       backups, UX cleanup, deployment

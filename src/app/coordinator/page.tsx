@@ -54,10 +54,10 @@ export default async function CoordinatorDashboardPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <Metric label="Active jobs" value={activeJobCount} />
+        <Metric label="Active jobs" value={activeJobCount} href="/coordinator/jobs" />
         <Metric label="Pending approval" value={pendingApprovalJobs.length} highlight />
         <Metric label="Pending applications" value={pendingApplicationCount} />
-        <Metric label="Total jobs" value={jobCount} />
+        <Metric label="Total jobs" value={jobCount} href="/coordinator/jobs" />
         <Metric
           label="Workers"
           value={workerCount}
@@ -82,7 +82,9 @@ export default async function CoordinatorDashboardPage() {
               <div key={job.id} className="rounded-lg border border-amber-300 bg-amber-50 p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <h3 className="text-sm font-semibold">{job.title}</h3>
+                    <Link href={`/coordinator/jobs/${job.id}`} className="text-sm font-semibold underline">
+                      {job.title}
+                    </Link>
                     <p className="text-xs text-neutral-600">
                       {job.employer.businessName} · {JOB_CATEGORY_LABELS[job.category]} ·{" "}
                       {job.workersRequired} needed · Rs. {job.payPerWorker.toString()}
@@ -105,7 +107,11 @@ export default async function CoordinatorDashboardPage() {
         ) : (
           <div className="space-y-3">
             {todaysJobs.map((job) => (
-              <div key={job.id} className="rounded-lg border border-neutral-200 p-4">
+              <Link
+                key={job.id}
+                href={`/coordinator/jobs/${job.id}`}
+                className="block rounded-lg border border-neutral-200 p-4 hover:border-neutral-400"
+              >
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <h3 className="text-sm font-semibold">{job.title}</h3>
@@ -118,7 +124,7 @@ export default async function CoordinatorDashboardPage() {
                 <p className="mt-2 text-xs text-neutral-600">
                   {job._count.assignments} / {job.workersRequired} confirmed
                 </p>
-              </div>
+              </Link>
             ))}
           </div>
         )}
