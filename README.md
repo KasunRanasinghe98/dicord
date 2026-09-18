@@ -203,6 +203,82 @@ job-creation UI yet (Phase 3).
   against, so it would either be misleading or need new tracking; deferred
   rather than approximated into something that looks more precise than it
   is.
+- **Page-level auth guards, not just the proxy.** Every `/coordinator`,
+  `/worker`, and `/employer` route now has a `layout.tsx` that calls
+  `requirePageRole()` (`src/server/auth/page-guard.ts`) before rendering
+  anything. This was a real gap: those pages previously rendered their data
+  — including worker NIC and phone numbers on `/coordinator/workers` —
+  relying entirely on `src/proxy.ts`, which its own comment already called
+  "a UX convenience, not the authorization boundary." Found by a dedicated
+  security-review pass, not by inspection during normal development.
+- **`accountStatus` is now actually enforced.** Both `requireRole()` (API
+  routes) and `requirePageRole()` (pages) re-check the user's current
+  `accountStatus` against the DB on every call, not just the JWT claim.
+  Session cookies live 30 days with no revocation list, so without this,
+  suspending or banning a user would have done nothing until their existing
+  cookie happened to expire. Verified by suspending a live session's user
+  mid-session and confirming immediate rejection on both a page and an API
+  call. This adds one `User` lookup per authenticated request — the right
+  tradeoff for a pilot; if latency ever matters more than instant
+  revocation, the next step would be a short-TTL cache or a session-version
+  claim, not reverting to trusting the JWT alone.
+- **OTP request is now rate-limited** (`src/server/auth/rate-limit.ts`,
+  in-memory fixed window: 5/phone and 20/IP per 15 minutes) — closes both
+  an SMS-cost abuse vector and a way to keep resetting the 5-attempt
+  lockout on the verify side by just requesting a fresh code. **Known
+  limitation, stated plainly in the code**: in-memory counters don't work
+  correctly on serverless (Vercel) where each invocation can be a fresh
+  instance — fine for this pilot's likely single-process deployment, but a
+  real production rollout needs a shared store (e.g. Upstash Redis).
+- Smaller hardening items from the same review, all fixed: JWT verification
+  now pins `algorithms: ["HS256"]` explicitly rather than trusting whatever
+  the key type allows; `AUTH_SECRET` throws on startup if it's still the
+  `.env.example` placeholder in production; `/api/jobs` query params are
+  now zod-validated instead of being passed straight to Prisma (a bad
+  `category`/`date` used to 500, now cleanly 400s); job completion moved
+  its assignment read inside the transaction and made the status update
+  conditional (`updateMany` guarded on `status: "CONFIRMED"`, skip on zero
+  rows) to close a real race where a worker cancelling mid-completion could
+  have gotten paid for a cancelled assignment.
+- **Audit log finally has a viewer** (`/coordinator/audit-log`) — every
+  phase since Phase 1 has been writing `AuditLog` rows, but there was no
+  way to actually look at them until now. Shows the most recent 100 events;
+  no pagination or filtering yet.
+- Added `error.tsx` and `not-found.tsx` (App Router convention) so an
+  unhandled exception or a bad URL shows a plain, non-technical message
+  instead of a stack trace or Next's default error page, plus baseline
+  security headers (`X-Frame-Options`, `X-Content-Type-Options`,
+  `Referrer-Policy`, `Permissions-Policy`, `Strict-Transport-Security`) in
+  `next.config.ts`.
+
+## Backups & deployment
+
+Not yet done — this is guidance for whenever deployment actually happens,
+not something this session did unilaterally (standing up real hosted
+infrastructure needs your go-ahead).
+
+- **Hosting plan** (decided at project start): Vercel for the app, a
+  managed Postgres for the database. Neon or Supabase both work with
+  Prisma; Neon's branching feature is convenient for a staging copy of the
+  pilot data.
+- **Before deploying**: generate a real `AUTH_SECRET` (`openssl rand -base64
+  32`) — the placeholder now hard-fails in production rather than silently
+  working. Set `SMS_PROVIDER` to a real provider once one is contracted;
+  until then OTP codes only reach the server console, which obviously
+  doesn't work for real users off your own machine.
+- **Migrations in production**: use `prisma migrate deploy` (non-interactive,
+  applies pending migrations) as a release step — never `migrate dev` or
+  `migrate reset` against a database with real user data.
+- **Backups**: Neon and Supabase both provide automatic point-in-time
+  recovery on their paid tiers — check which tier the pilot actually runs
+  on, since free tiers often have much shorter retention. If self-hosting
+  Postgres instead, a nightly `pg_dump` to object storage (S3-compatible)
+  is the minimum viable setup; this repo doesn't include that automation
+  since it depends on where the database ends up living.
+- **Rate limiting caveat**: the in-memory OTP rate limiter (above) needs a
+  shared store before this runs on genuinely serverless infrastructure with
+  multiple concurrent instances — check this before relying on it under
+  real load.
 
 ## Build phases (see blueprint §36)
 
@@ -234,5 +310,9 @@ job-creation UI yet (Phase 3).
       (`/coordinator/payments`), a derived work-history summary on the
       worker dashboard, and a coordinator reports page
       (`/coordinator/reports`) leading with jobs-completed/total.
-- [ ] Phase 7 — pilot hardening: error handling, security, audit logs, tests,
-      backups, UX cleanup, deployment
+- [x] **Phase 7** — pilot hardening: page-level auth guards, `accountStatus`
+      revocation, OTP rate limiting, JWT/secret hardening, input validation,
+      a completion-time race fix, global error/not-found pages, security
+      headers, and an audit-log viewer. See "Security & hardening" and
+      "Backups & deployment" below for what shipped and what's still
+      manual/deferred.

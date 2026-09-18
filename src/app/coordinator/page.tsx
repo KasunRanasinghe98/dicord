@@ -64,6 +64,9 @@ export default async function CoordinatorDashboardPage() {
         <Link href="/coordinator/reports" className="text-xs text-neutral-500 underline">
           Reports
         </Link>
+        <Link href="/coordinator/audit-log" className="text-xs text-neutral-500 underline">
+          Audit log
+        </Link>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">

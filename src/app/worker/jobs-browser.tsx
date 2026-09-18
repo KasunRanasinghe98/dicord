@@ -16,6 +16,7 @@ export function JobsBrowser({ initialJobs }: { initialJobs: WorkerJobListing[] }
   const [jobs, setJobs] = useState(initialJobs);
   const [category, setCategory] = useState<JobCategory | "">("");
   const [loading, setLoading] = useState(false);
+  const [applyErrors, setApplyErrors] = useState<Record<string, string>>({});
 
   async function applyFilter(nextCategory: JobCategory | "") {
     setCategory(nextCategory);
@@ -31,6 +32,11 @@ export function JobsBrowser({ initialJobs }: { initialJobs: WorkerJobListing[] }
   }
 
   async function apply(jobId: string) {
+    setApplyErrors((prev) => {
+      const next = { ...prev };
+      delete next[jobId];
+      return next;
+    });
     setJobs((prev) =>
       prev.map((j) => (j.id === jobId ? { ...j, applicationStatus: "APPLIED" } : j)),
     );
@@ -40,7 +46,7 @@ export function JobsBrowser({ initialJobs }: { initialJobs: WorkerJobListing[] }
       setJobs((prev) =>
         prev.map((j) => (j.id === jobId ? { ...j, applicationStatus: null } : j)),
       );
-      alert(body.error ?? "Could not apply.");
+      setApplyErrors((prev) => ({ ...prev, [jobId]: body.error ?? "Could not apply." }));
     }
   }
 
@@ -117,6 +123,9 @@ export function JobsBrowser({ initialJobs }: { initialJobs: WorkerJobListing[] }
                 >
                   Apply
                 </button>
+              )}
+              {applyErrors[job.id] && (
+                <p className="mt-1 text-xs text-red-600">{applyErrors[job.id]}</p>
               )}
             </div>
           </div>

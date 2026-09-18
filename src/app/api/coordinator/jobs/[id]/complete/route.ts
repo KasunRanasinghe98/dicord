@@ -27,18 +27,31 @@ export async function POST(
     return NextResponse.json({ error: "Only an in-progress job can be completed." }, { status: 400 });
   }
 
-  const assignments = await db.assignment.findMany({
-    where: { jobId: id, status: "CONFIRMED" },
-    include: { attendance: true },
-  });
+  const finalizedCount = await db.$transaction(async (tx) => {
+    // Read and write inside the same transaction, with a status-guarded
+    // update: a worker cancelling their assignment concurrently (between
+    // this read and this write) would otherwise let a CANCELLED assignment
+    // get silently flipped to COMPLETED and paid — a real money-touching
+    // race, not just a theoretical one.
+    const assignments = await tx.assignment.findMany({
+      where: { jobId: id, status: "CONFIRMED" },
+      include: { attendance: true },
+    });
 
-  await db.$transaction(async (tx) => {
+    let finalized = 0;
     for (const assignment of assignments) {
       const attended = assignment.attendance?.status === "PRESENT" || assignment.attendance?.status === "LATE";
+      const targetStatus = attended ? "COMPLETED" : "NO_SHOW";
+
+      const { count } = await tx.assignment.updateMany({
+        where: { id: assignment.id, status: "CONFIRMED" },
+        data: { status: targetStatus },
+      });
+      if (count === 0) continue; // status changed since the read above — skip it
+
+      await tx.application.update({ where: { id: assignment.applicationId }, data: { status: targetStatus } });
 
       if (attended) {
-        await tx.assignment.update({ where: { id: assignment.id }, data: { status: "COMPLETED" } });
-        await tx.application.update({ where: { id: assignment.applicationId }, data: { status: "COMPLETED" } });
         // Blueprint §18: a "successful hire" is a worker who was assigned
         // and completed the shift — a NO_SHOW never generates a Payment.
         // The fee is a snapshot of the configured rate at completion time,
@@ -52,18 +65,17 @@ export async function POST(
             platformFeeAmount: getPlatformFeePerWorker(),
           },
         });
-      } else {
-        await tx.assignment.update({ where: { id: assignment.id }, data: { status: "NO_SHOW" } });
-        await tx.application.update({ where: { id: assignment.applicationId }, data: { status: "NO_SHOW" } });
-        if (assignment.attendance && assignment.attendance.status !== "ABSENT") {
-          await tx.attendance.update({
-            where: { id: assignment.attendance.id },
-            data: { status: "ABSENT", markedByUserId: auth.session.userId, markedAt: new Date() },
-          });
-        }
+      } else if (assignment.attendance && assignment.attendance.status !== "ABSENT") {
+        await tx.attendance.update({
+          where: { id: assignment.attendance.id },
+          data: { status: "ABSENT", markedByUserId: auth.session.userId, markedAt: new Date() },
+        });
       }
+      finalized += 1;
     }
+
     await tx.job.update({ where: { id }, data: { status: "COMPLETED" } });
+    return finalized;
   });
 
   await logAudit({
@@ -71,7 +83,7 @@ export async function POST(
     action: "JOB_COMPLETED",
     targetType: "Job",
     targetId: id,
-    metadata: { assignmentsFinalized: assignments.length },
+    metadata: { assignmentsFinalized: finalizedCount },
   });
 
   return NextResponse.json({ ok: true });

@@ -10,10 +10,20 @@ export interface SessionPayload {
   role: Role;
 }
 
+const PLACEHOLDER_SECRET = "replace-with-a-random-32-byte-secret";
+
 function getSecretKey(): Uint8Array {
   const secret = process.env.AUTH_SECRET;
   if (!secret) {
     throw new Error("AUTH_SECRET environment variable is not set.");
+  }
+  // .env.example ships this literal string. It works as a signing key —
+  // nothing stops a copy-pasted, never-edited .env from "working" in
+  // production with every session forgeable by anyone who's read the repo.
+  if (secret === PLACEHOLDER_SECRET && process.env.NODE_ENV === "production") {
+    throw new Error(
+      "AUTH_SECRET is still set to the placeholder value from .env.example. Generate a real secret before running in production.",
+    );
   }
   return new TextEncoder().encode(secret);
 }
@@ -28,7 +38,7 @@ export async function signSessionToken(payload: SessionPayload): Promise<string>
 
 export async function verifySessionToken(token: string): Promise<SessionPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, getSecretKey());
+    const { payload } = await jwtVerify(token, getSecretKey(), { algorithms: ["HS256"] });
     if (typeof payload.userId !== "string" || typeof payload.role !== "string") {
       return null;
     }
