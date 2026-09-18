@@ -64,8 +64,19 @@ export function LoginForm({
       if (!res.ok) {
         throw new Error(body.error ?? "Could not verify code.");
       }
+      // purpose:"REGISTER" only ever creates WORKER/EMPLOYER accounts (the
+      // `role` state), but purpose:"LOGIN" can return any role, including
+      // COORDINATOR/ADMIN for an existing account — those weren't handled
+      // here, so a coordinator login landed on /worker, got bounced by the
+      // role-gated proxy, and looked like the login had silently failed.
       const destinationRole = body.user?.role ?? role;
-      router.push(destinationRole === "EMPLOYER" ? "/employer" : "/worker");
+      const destination =
+        destinationRole === "EMPLOYER"
+          ? "/employer"
+          : destinationRole === "COORDINATOR" || destinationRole === "ADMIN"
+            ? "/coordinator"
+            : "/worker";
+      router.push(destination);
       router.refresh();
     } catch (err) {
       setError((err as Error).message);
