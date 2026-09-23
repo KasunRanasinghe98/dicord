@@ -253,32 +253,52 @@ job-creation UI yet (Phase 3).
 
 ## Backups & deployment
 
-Not yet done — this is guidance for whenever deployment actually happens,
-not something this session did unilaterally (standing up real hosted
-infrastructure needs your go-ahead).
+Hosting plan: Vercel for the app, Neon for managed Postgres. Standing up
+real infrastructure needs your own accounts and go-ahead — nothing here
+runs on its own.
 
-- **Hosting plan** (decided at project start): Vercel for the app, a
-  managed Postgres for the database. Neon or Supabase both work with
-  Prisma; Neon's branching feature is convenient for a staging copy of the
-  pilot data.
-- **Before deploying**: generate a real `AUTH_SECRET` (`openssl rand -base64
-  32`) — the placeholder now hard-fails in production rather than silently
-  working. Set `SMS_PROVIDER` to a real provider once one is contracted;
-  until then OTP codes only reach the server console, which obviously
-  doesn't work for real users off your own machine.
-- **Migrations in production**: use `prisma migrate deploy` (non-interactive,
-  applies pending migrations) as a release step — never `migrate dev` or
-  `migrate reset` against a database with real user data.
-- **Backups**: Neon and Supabase both provide automatic point-in-time
-  recovery on their paid tiers — check which tier the pilot actually runs
-  on, since free tiers often have much shorter retention. If self-hosting
-  Postgres instead, a nightly `pg_dump` to object storage (S3-compatible)
-  is the minimum viable setup; this repo doesn't include that automation
-  since it depends on where the database ends up living.
-- **Rate limiting caveat**: the in-memory OTP rate limiter (above) needs a
-  shared store before this runs on genuinely serverless infrastructure with
-  multiple concurrent instances — check this before relying on it under
-  real load.
+**Deploy checklist:**
+
+1. Create a Neon project, copy its connection string.
+2. Push this repo to a GitHub repo.
+3. In Vercel, import that GitHub repo (auto-detects Next.js — no
+   `vercel.json` needed). Set these environment variables in the Vercel
+   project settings before the first deploy:
+   - `DATABASE_URL` — the Neon connection string
+   - `AUTH_SECRET` — a fresh secret, **not** the one in your local `.env`
+     (`openssl rand -base64 32`); the placeholder value from
+     `.env.example` now hard-fails at runtime in production rather than
+     silently working
+   - `SMS_PROVIDER` — `console` for now (codes land in Vercel's function
+     logs, viewable in the dashboard or `vercel logs`); switch to a real
+     provider once one is contracted
+   - `PLATFORM_FEE_PER_WORKER` — e.g. `300.00`
+4. Apply migrations to the production database as a deliberate release
+   step, **not** by running `migrate dev`/`migrate reset` against it:
+   `DATABASE_URL="<neon-url>" npm run db:migrate:deploy`
+5. Provision the real coordinator account — never run the local `db:seed`
+   (fake coordinator/worker/employer/demo jobs) against production:
+   `DATABASE_URL="<neon-url>" COORDINATOR_PHONE="<real phone>" npm run db:seed:coordinator`
+6. Deploy, then smoke-test the golden path on the live URL: coordinator
+   login, worker registration, apply → select → confirm → attendance →
+   complete → payment.
+
+**`package.json` already has what this needs**: `postinstall: "prisma
+generate"` (so a cached Vercel build still has a fresh client),
+`engines.node: ">=20.19.0"` (a couple of dependencies warn below this
+locally), `db:migrate:deploy` and `db:seed:coordinator` for steps 4–5
+above.
+
+- **Backups**: Neon provides automatic point-in-time recovery on paid
+  tiers — check retention on whichever tier the pilot actually runs on,
+  since free tiers are usually much shorter. Branching is also convenient
+  for a disposable staging copy of pilot data before testing something
+  risky.
+- **Rate limiting caveat**: the in-memory OTP rate limiter
+  (`src/server/auth/rate-limit.ts`) needs a shared store (e.g. Upstash
+  Redis) before this holds correctly under multiple concurrent serverless
+  instances — fine for a low-traffic pilot on one region, worth revisiting
+  before real load.
 
 ## Build phases (see blueprint §36)
 
