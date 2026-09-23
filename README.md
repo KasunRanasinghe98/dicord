@@ -253,11 +253,26 @@ job-creation UI yet (Phase 3).
 
 ## Backups & deployment
 
+**Live**: https://dicord-rust.vercel.app — deployed on Vercel, database on
+Neon, repo at https://github.com/KasunRanasinghe98/dicord (currently
+public). Verified end-to-end against the live deployment: coordinator
+login, worker registration, profile completion with NIC, and coordinator
+visibility of the new worker all confirmed working from a fresh production
+database. `SMS_PROVIDER=console` is still in effect — OTP codes only reach
+Vercel's function logs, not real phones, until a real SMS provider is
+wired up (deliberately deferred; see below).
+
+**Known cleanup item**: a "Production Test Worker" (NIC `912345678V`,
+phone `+94759991111`) exists in the production DB from that verification
+pass — left in place intentionally for now, delete before real pilot
+users start registering.
+
 Hosting plan: Vercel for the app, Neon for managed Postgres. Standing up
 real infrastructure needs your own accounts and go-ahead — nothing here
 runs on its own.
 
-**Deploy checklist:**
+**Deploy checklist (completed once already — kept here for the next
+deploy/environment, e.g. if a separate staging setup is ever needed):**
 
 1. Create a Neon project, copy its connection string.
 2. Push this repo to a GitHub repo.
