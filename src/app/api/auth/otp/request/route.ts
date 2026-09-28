@@ -49,7 +49,18 @@ export async function POST(request: Request) {
     );
   }
 
-  await requestOtp(phone, parsed.data.purpose);
+  try {
+    await requestOtp(phone, parsed.data.purpose);
+  } catch (err) {
+    // A real SMS provider can genuinely fail per-request (bad number,
+    // trial-account restriction, provider outage) — log the real reason
+    // server-side but never leak provider internals to the client.
+    console.error("OTP send failed:", err);
+    return NextResponse.json(
+      { error: "Could not send the verification code. Please try again." },
+      { status: 502 },
+    );
+  }
 
   return NextResponse.json({ ok: true });
 }
