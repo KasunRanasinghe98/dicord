@@ -258,14 +258,27 @@ Neon, repo at https://github.com/KasunRanasinghe98/dicord (currently
 public). Verified end-to-end against the live deployment: coordinator
 login, worker registration, profile completion with NIC, and coordinator
 visibility of the new worker all confirmed working from a fresh production
-database. `SMS_PROVIDER=console` is still in effect — OTP codes only reach
-Vercel's function logs, not real phones, until a real SMS provider is
-wired up (deliberately deferred; see below).
+database. Production DB currently holds exactly one account — the real
+coordinator (`+94772123392`) — after test accounts created during
+verification were cleaned up.
 
-**Known cleanup item**: a "Production Test Worker" (NIC `912345678V`,
-phone `+94759991111`) exists in the production DB from that verification
-pass — left in place intentionally for now, delete before real pilot
-users start registering.
+**SMS is deliberately still `console`, not a stalled task.** A Twilio
+integration exists (`src/server/auth/sms.ts`, `SmsProvider` /
+`TwilioSmsProvider`) and works, but Twilio's trial doesn't support Sri
+Lankan numbers and paid rates were judged too high for this stage. Rather
+than integrate a different paid gateway before there's real usage to
+justify it, the decision was to keep `SMS_PROVIDER=console` and have the
+coordinator manually relay OTP codes (read from Vercel's function logs) to
+the first handful of real pilot testers via WhatsApp — the same channel
+the whole process already runs on today. This directly follows the
+blueprint's stated progression (§39: manual → digitized → assisted →
+automated → optimized): SMS delivery is an "automate" concern, and it's
+fine to defer until real volume makes manual relay impractical. When that
+time comes, either finish wiring Twilio (code already exists, e.g. via a
+paid Twilio number that supports LK, or Twilio's Messaging Service with
+proper geo permissions) or swap in a Sri Lanka-focused SMS gateway
+(e.g. Notify.lk) behind the same `SmsProvider` interface — no other code
+changes needed either way.
 
 Hosting plan: Vercel for the app, Neon for managed Postgres. Standing up
 real infrastructure needs your own accounts and go-ahead — nothing here
